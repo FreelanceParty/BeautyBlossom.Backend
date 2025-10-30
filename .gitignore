@@ -4,5 +4,3 @@ node_modules/
 .env.production
 .config.js
 /.idea
-yarn.lock
-package-lock.json

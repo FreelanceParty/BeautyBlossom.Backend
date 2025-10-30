@@ -5,6 +5,6 @@ const ctrl = require("../../controllers/brands");
 const router = express.Router();
 
 router.get("/", ctrl.getAllBrands);
-router.get("/name", ctrl.getByBrand);
+router.get("/:name", ctrl.getByBrand);
 
 module.exports = router;

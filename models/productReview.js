@@ -4,7 +4,7 @@ const {handleMongooseError} = require('../helpers')
 
 const productReviewsSchema = new Schema({
 	productId: {
-		type:     String,
+		type:     Number,
 		required: true,
 	},
 	email:     {
@@ -32,7 +32,7 @@ const productReviewsSchema = new Schema({
 productReviewsSchema.post('save', handleMongooseError)
 
 const addSchema = Joi.object({
-	productId: Joi.string().required(),
+	productId: Joi.number().required(),
 	email:     Joi.string().required(),
 	firstName: Joi.string().required(),
 	rate:      Joi.number().required(),

@@ -8,9 +8,8 @@ const getAllBrands = async (req, res) => {
 };
 
 const getByBrand = async (req, res) => {
-	const {brand} = req.params;
-
-	const result = await Brand.findOne({name: new RegExp(`^${brand}$`, "i")});
+	const {name} = req.params;
+	const result = await Brand.findOne({name: new RegExp(`^${name}$`, "i")});
 
 	if (!result) {
 		throw HttpError(404, "Not found");

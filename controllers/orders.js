@@ -32,8 +32,8 @@ const add = async (req, res) => {
 
 const getAllbyUser = async (req, res) => {
 	const {user} = req; // Припустимо, що ви отримуєте інформацію про користувача з middleware
-
-	const userOrders = await orders.find({owner: user._id});
+	const userId = user._id.toString().trim();
+	const userOrders = await orders.find({owner: userId});
 
 	res.json(userOrders);
 };

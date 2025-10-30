@@ -12,7 +12,14 @@ const getAllForProduct = async (req, res) => {
 	res.json(reviews);
 };
 
+const getAll = async (req, res) => {
+	const reviews = await ProductReview.find({});
+
+	res.json(reviews);
+};
+
 module.exports = {
 	getAllForProduct: ctrlWrapper(getAllForProduct),
+	getAll:           ctrlWrapper(getAll),
 	add:              ctrlWrapper(add),
 }
