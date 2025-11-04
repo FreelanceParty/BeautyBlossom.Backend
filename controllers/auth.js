@@ -20,196 +20,240 @@ const {SECRET_KEY} = process.env;
 
 const avatarsDir = path.join(__dirname, "../", "public", "avatars");
 
+const sendTelegramMessage = require("../helpers/telegram");
+
 const register = async (req, res) => {
-	const {email, password, number} = req.body;
-	const user = await User.findOne({email});
-	const numberUser = await User.findOne({number});
-	if (user) {
-		throw HttpError(409, "Email already in use");
+	try {
+		const {email, password, number} = req.body;
+		const user = await User.findOne({email});
+		const numberUser = await User.findOne({number});
+		if (user) {
+			throw HttpError(409, "Email already in use");
+		}
+		if (numberUser) {
+			throw HttpError(409, "The phone number is already in use");
+		}
+		const hashPassword = await bcrypt.hash(password, 10);
+		// для однакових строк хеш різний, (пароль, сіль)
+		// сіль це набір випадкових символів
+		const avatarURL = gravatar.url(email);
+		const verificationCode = nanoid();
+
+		// Передайте адмінські права, якщо відповідний користувач
+		const isAdmin = req.body.isAdmin;
+
+		const newUser = await User.create({
+			...req.body,
+			password: hashPassword,
+			avatarURL,
+			verificationCode,
+			isAdmin:  isAdmin,
+		});
+
+		const message = {
+			to:      req.body.email,
+			subject: "Beauty-blossom",
+			text:    `Вітаємо, Ви успішно зареєструвались на нашому сайті!
+	        
+	        данні вашого аккаунту:
+	        login: ${req.body.email}
+	        password: ${req.body.password}
+	        
+	        Не потрібно відповідати на данне повідомлення.
+	        
+	        Контакти для зворотнього зв'язку
+	        +380500529100
+	        beautyblossom.opt@gmail.com`,
+		};
+		mailer(message);
+		// const verifyEmail = {
+		//     to: email,
+		//     subject: "Verify email",
+		//     html: `<a target="_blank" href="${BASE_URL}/api/auth/verify/${verificationCode}">Click verify email</a>`
+		// };
+
+		// await sendEmail(verifyEmail);
+
+		res.status(201).json({
+			email:     newUser.email,
+			firstName: newUser.firstName,
+			lastName:  newUser.lastName,
+			country:   newUser.country,
+			city:      newUser.city,
+			optUser:   newUser.optUser,
+			isAdmin:   newUser.isAdmin,
+		});
+
+		//     res.status(201).json({
+		//     email: newUser.email,
+		//     name: newUser.name,
+
+		// })
+		// }
+
+		// const verifyEmail = async(req, res)=> {
+		//     const {verificationCode} = req.params;
+		//     const user = await User.findOne({verificationCode});
+		//     if(!user){
+		//         throw HttpError(401, "Email not found")
+		//     }
+		//     await User.findByIdAndUpdate(user._id, {verify: true, verificationCode: ""});
+
+		//     res.json({
+		//         message: "Email verify success"
+		//     })
+		// }
+
+		// const resendVerifyEmail = async(req, res)=> {
+		//     const {email} = req.body;
+		//     const user = await User.findOne({email});
+		//     if(!user) {
+		//         throw HttpError(401, "Email not found");
+		//     }
+		//     if(user.verify) {
+		//         throw HttpError(401, "Email already verify");
+		//     }
+
+		//     const verifyEmail = {
+		//         to: email,
+		//         subject: "Verify email",
+		//         html: `<a target="_blank" href="${BASE_URL}/api/auth/verify/${user.verificationCode}">Click verify email</a>`
+		//     };
+
+		//     await sendEmail(verifyEmail);
+
+		//     res.json({
+		//         message: "Verify email send success"
+		//     })
+	} catch (e) {
+		if (e.code !== 409) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/auth/register): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
-	if (numberUser) {
-		throw HttpError(409, "The phone number is already in use");
-	}
-	const hashPassword = await bcrypt.hash(password, 10);
-	// для однакових строк хеш різний, (пароль, сіль)
-	// сіль це набір випадкових символів
-	const avatarURL = gravatar.url(email);
-	const verificationCode = nanoid();
-
-	// Передайте адмінські права, якщо відповідний користувач
-	const isAdmin = req.body.isAdmin;
-
-	const newUser = await User.create({
-		...req.body,
-		password: hashPassword,
-		avatarURL,
-		verificationCode,
-		isAdmin:  isAdmin,
-	});
-
-	const message = {
-		to:      req.body.email,
-		subject: "Beauty-blossom",
-		text:    `Вітаємо, Ви успішно зареєструвались на нашому сайті!
-        
-        данні вашого аккаунту:
-        login: ${req.body.email}
-        password: ${req.body.password}
-        
-        Не потрібно відповідати на данне повідомлення.
-        
-        Контакти для зворотнього зв'язку
-        +380500529100
-        beautyblossom.opt@gmail.com`,
-	};
-	mailer(message);
-	// const verifyEmail = {
-	//     to: email,
-	//     subject: "Verify email",
-	//     html: `<a target="_blank" href="${BASE_URL}/api/auth/verify/${verificationCode}">Click verify email</a>`
-	// };
-
-	// await sendEmail(verifyEmail);
-
-	res.status(201).json({
-		email:     newUser.email,
-		firstName: newUser.firstName,
-		lastName:  newUser.lastName,
-		country:   newUser.country,
-		city:      newUser.city,
-		optUser:   newUser.optUser,
-		isAdmin:   newUser.isAdmin,
-	});
-
-	//     res.status(201).json({
-	//     email: newUser.email,
-	//     name: newUser.name,
-
-	// })
-	// }
-
-	// const verifyEmail = async(req, res)=> {
-	//     const {verificationCode} = req.params;
-	//     const user = await User.findOne({verificationCode});
-	//     if(!user){
-	//         throw HttpError(401, "Email not found")
-	//     }
-	//     await User.findByIdAndUpdate(user._id, {verify: true, verificationCode: ""});
-
-	//     res.json({
-	//         message: "Email verify success"
-	//     })
-	// }
-
-	// const resendVerifyEmail = async(req, res)=> {
-	//     const {email} = req.body;
-	//     const user = await User.findOne({email});
-	//     if(!user) {
-	//         throw HttpError(401, "Email not found");
-	//     }
-	//     if(user.verify) {
-	//         throw HttpError(401, "Email already verify");
-	//     }
-
-	//     const verifyEmail = {
-	//         to: email,
-	//         subject: "Verify email",
-	//         html: `<a target="_blank" href="${BASE_URL}/api/auth/verify/${user.verificationCode}">Click verify email</a>`
-	//     };
-
-	//     await sendEmail(verifyEmail);
-
-	//     res.json({
-	//         message: "Verify email send success"
-	//     })
 };
 
 const login = async (req, res) => {
-	const {email, password} = req.body;
-	const user = await User.findOne({email});
-	if (!user) {
-		throw HttpError(401, "Email or password invalid");
+	try {
+		const {email, password} = req.body;
+		const user = await User.findOne({email});
+		if (!user) {
+			throw HttpError(401, "Email or password invalid");
+		}
+
+		// if(!user.verify) {
+		//     throw HttpError(401, "Email not verified");
+		// }
+
+		const passwordCompare = await bcrypt.compare(password, user.password);
+		// в bcrypt є метод компеір передаємо ( не захешований пароль, захешований )
+		// якщо 2 арг є захешованою версією першого повертає тру
+		if (!passwordCompare) {
+			throw HttpError(401, "Email or password invalid");
+		}
+		if (user.isAdmin) {
+			user.isAdmin = true;
+		}
+
+		const payload = {
+			id: user._id,
+		};
+
+		const token = jwt.sign(payload, SECRET_KEY, {expiresIn: "23d"});
+		// токен це пропуск складається з пейлоад(може бкти id користувачва)
+		// секретний ключ та час життя
+		// токен можна розкодувати
+		// const decodeToken = jwt.decode(tocken)
+		// console.log(decodeToken);
+		await User.findByIdAndUpdate(user._id, {token});
+
+		res.json({
+			firstName: user.firstName,
+			lastName:  user.lastName,
+			number:    user.number,
+			email:     email,
+			token:     token,
+			isAdmin:   user.isAdmin,
+			optUser:   user.optUser,
+		});
+	} catch (e) {
+		if (e.code !== 401) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/auth/login): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
-
-	// if(!user.verify) {
-	//     throw HttpError(401, "Email not verified");
-	// }
-
-	const passwordCompare = await bcrypt.compare(password, user.password);
-	// в bcrypt є метод компеір передаємо ( не захешований пароль, захешований )
-	// якщо 2 арг є захешованою версією першого повертає тру
-	if (!passwordCompare) {
-		throw HttpError(401, "Email or password invalid");
-	}
-	if (user.isAdmin) {
-		user.isAdmin = true;
-	}
-
-	const payload = {
-		id: user._id,
-	};
-
-	const token = jwt.sign(payload, SECRET_KEY, {expiresIn: "23d"});
-	// токен це пропуск складається з пейлоад(може бкти id користувачва)
-	// секретний ключ та час життя
-	// токен можна розкодувати
-	// const decodeToken = jwt.decode(tocken)
-	// console.log(decodeToken);
-	await User.findByIdAndUpdate(user._id, {token});
-
-	res.json({
-		firstName: user.firstName,
-		lastName:  user.lastName,
-		number:    user.number,
-		email:     email,
-		token:     token,
-		isAdmin:   user.isAdmin,
-		optUser:   user.optUser,
-	});
 };
 
 const getCurrent = async (req, res) => {
-	const {_id, email, firstName, lastName, number, isAdmin, optUser} =
-		      req.user;
-	res.json({
-		email,
-		firstName,
-		lastName,
-		number,
-		isAdmin,
-		optUser,
-		_id,
-	});
+	try {
+		const {_id, email, firstName, lastName, number, isAdmin, optUser} =
+			      req.user;
+		res.json({
+			email,
+			firstName,
+			lastName,
+			number,
+			isAdmin,
+			optUser,
+			_id,
+		});
+	} catch (e) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/auth/getCurrent): ${e.message}\n\n`
+		);
+		console.error(e);
+		throw e;
+	}
 };
 
 const logout = async (req, res) => {
-	const {_id} = req.user;
-	await User.findByIdAndUpdate(_id, {token: ""});
+	try {
+		const {_id} = req.user;
+		await User.findByIdAndUpdate(_id, {token: ""});
 
-	res.json({
-		message: "Logout success",
-	});
+		res.json({
+			message: "Logout success",
+		});
+	} catch (e) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/auth/logout): ${e.message}\n\n`
+		);
+		console.error(e);
+		throw e;
+	}
 };
 
 const updateAvatar = async (req, res) => {
-	const {_id} = req.user;
-	const {path: tempUpload, originalname} = req.file;
-	const filename = `${_id}_${originalname}`;
-	const resultUpload = path.join(avatarsDir, filename);
-	await fs.rename(tempUpload, resultUpload);
-	const avatarURL = path.join("avatars", filename);
-	await User.findByIdAndUpdate(_id, {avatarURL});
+	try {
+		const {_id} = req.user;
+		const {path: tempUpload, originalname} = req.file;
+		const filename = `${_id}_${originalname}`;
+		const resultUpload = path.join(avatarsDir, filename);
+		await fs.rename(tempUpload, resultUpload);
+		const avatarURL = path.join("avatars", filename);
+		await User.findByIdAndUpdate(_id, {avatarURL});
 
-	res.json({
-		avatarURL,
-	});
+		res.json({
+			avatarURL,
+		});
+	} catch (e) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/auth/updateAvatar): ${e.message}\n\n`
+		);
+	}
 };
 
 const updateUserData = async (req, res) => {
-	const {_id} = req.user;
-	const {email, firstName, lastName, number} = req.body;
-
 	try {
+		const {_id} = req.user;
+		const {email, firstName, lastName, number} = req.body;
+
 		// Перевірка, чи користувач існує
 		const user = await User.findById(_id);
 		if (!user) {
@@ -234,17 +278,22 @@ const updateUserData = async (req, res) => {
 		res.json({
 			message: "Profile updated successfully",
 		});
-	} catch (error) {
-		console.error(error);
+	} catch (e) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/auth/updateUserData): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
 		throw HttpError(500, "Internal Server Error");
 	}
 };
 
 const changePassword = async (req, res) => {
-	const {_id} = req.user;
-	const {oldPassword, newPassword} = req.body;
-
 	try {
+		const {_id} = req.user;
+		const {oldPassword, newPassword} = req.body;
+
 		// Перевірка, чи користувач існує
 		const user = await User.findById(_id);
 		if (!user) {
@@ -265,9 +314,14 @@ const changePassword = async (req, res) => {
 		res.json({
 			message: "Password changed successfully",
 		});
-	} catch (error) {
-		console.error(error);
-		throw error; // just rethrow the error, let the error handler deal with it
+	} catch (e) {
+		if (e.code !== 404 && e.code !== 401) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/auth/changePassword): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e; // just rethrow the error, let the error handler deal with it
 	}
 };
 
@@ -300,21 +354,21 @@ const changePassword = async (req, res) => {
 // };
 
 const restorePassword = async (req, res) => {
-	const {email} = req.body;
-
-	const generateNewPassword = () => {
-		const length = 10; // Довжина нового пароля
-		const charset =
-			      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-		let newPassword = "";
-		for (let i = 0; i < length; i++) {
-			const randomIndex = Math.floor(Math.random() * charset.length);
-			newPassword += charset[randomIndex];
-		}
-		return newPassword;
-	};
-
 	try {
+		const {email} = req.body;
+
+		const generateNewPassword = () => {
+			const length = 10; // Довжина нового пароля
+			const charset =
+				      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+			let newPassword = "";
+			for (let i = 0; i < length; i++) {
+				const randomIndex = Math.floor(Math.random() * charset.length);
+				newPassword += charset[randomIndex];
+			}
+			return newPassword;
+		};
+
 		const user = await User.findOne({email});
 		if (!user) {
 			throw createError(404, "User not found");
@@ -335,16 +389,21 @@ const restorePassword = async (req, res) => {
 		res.json({
 			message: "Password restored successfully",
 		});
-	} catch (error) {
-		console.error(error);
-		throw error;
+	} catch (e) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/auth/restorePassword): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
 };
 
 const restorePasswordStep2 = async (req, res) => {
-	const {_id} = req.body;
-	//  const { _id, newPassword } = req.body;
 	try {
+		const {_id} = req.body;
+		//  const { _id, newPassword } = req.body;
 		const user = await User.findById(_id);
 		if (!user) {
 			throw new HttpError(404, "User not found");
@@ -357,9 +416,14 @@ const restorePasswordStep2 = async (req, res) => {
 		res.json({
 			message: "Password restored successfully (step 2)",
 		});
-	} catch (error) {
-		console.error(error);
-		throw error;
+	} catch (e) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/auth/restorePasswordStep2): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
 };
 

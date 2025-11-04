@@ -1,6 +1,8 @@
 const {User} = require("../models/user");
 const ctrlWrapper = require("../helpers/ctrlWrapper");
 
+const sendTelegramMessage = require("../helpers/telegram");
+
 const getUsers = async (req, res) => {
 	try {
 		const result = await User.find(
@@ -18,6 +20,9 @@ const getUsers = async (req, res) => {
 
 		res.json(simplifiedData);
 	} catch (error) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/users/getUsers): ${error.message}\n\n`
+		);
 		console.error(error);
 		res.status(500).json({message: "Internal Server Error"});
 	}

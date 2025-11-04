@@ -1,21 +1,41 @@
 const {HttpError, ctrlWrapper} = require("../helpers");
 const {Brand} = require("../models/brand");
 
-const getAllBrands = async (req, res) => {
-	const result = await Brand.find();
+const sendTelegramMessage = require("../helpers/telegram");
 
-	res.json(result);
+const getAllBrands = async (req, res) => {
+	try {
+		const result = await Brand.find();
+
+		res.json(result);
+	} catch (e) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/brands/getAllBrands): ${e.message}\n\n`
+		);
+		console.error(e);
+		throw e;
+	}
 };
 
 const getByBrand = async (req, res) => {
-	const {name} = req.params;
-	const result = await Brand.findOne({name: new RegExp(`^${name}$`, "i")});
+	try {
+		const {name} = req.params;
+		const result = await Brand.findOne({name: new RegExp(`^${name}$`, "i")});
 
-	if (!result) {
-		throw HttpError(404, "Not found");
+		if (!result) {
+			throw HttpError(404, "Not found");
+		}
+
+		res.json(result);
+	} catch (e) {
+		if (e.code !== 404) {
+			await sendTelegramMessage(
+				`❌ Помилка (Backend. controllers/brands/getByBrand): ${e.message}\n\n`
+			);
+		}
+		console.error(e);
+		throw e;
 	}
-
-	res.json(result);
 };
 
 module.exports = {
