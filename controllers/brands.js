@@ -28,7 +28,7 @@ const getByBrand = async (req, res) => {
 
 		res.json(result);
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/brands/getByBrand): ${e.message}\n\n`
 			);

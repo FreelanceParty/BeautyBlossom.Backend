@@ -115,7 +115,7 @@ const getAll = async (req, res) => {
 			goods:      result,
 		});
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/goods/getAll): ${e.message}\n\n`
 			);
@@ -171,7 +171,7 @@ const getById = async (req, res) => {
 		}
 		res.json(result);
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/goods/getById): ${e.message}\n\n`
 			);
@@ -205,7 +205,7 @@ const updateById = async (req, res) => {
 		}
 		res.json(result);
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/goods/updateById): ${e.message}\n\n`
 			);
@@ -224,7 +224,7 @@ const updateCheked = async (req, res) => {
 		}
 		res.json(result);
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/goods/updateCheked): ${e.message}\n\n`
 			);
@@ -245,7 +245,7 @@ const deleteById = async (req, res) => {
 			message: "Delete success",
 		});
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/goods/deleteById): ${e.message}\n\n`
 			);
@@ -374,7 +374,7 @@ const getXML = async (req, res) => {
 
 		res.status(200).send(xml);
 	} catch (error) {
-		if (e.code !== 404) {
+		if (error.code !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/goods/getXML): ${error.message}\n\n`
 			);

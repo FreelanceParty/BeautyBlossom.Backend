@@ -126,7 +126,7 @@ const register = async (req, res) => {
 		//         message: "Verify email send success"
 		//     })
 	} catch (e) {
-		if (e.code !== 409) {
+		if (e.status !== 409) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/auth/register): ${e.message}\n\n`
 			);
@@ -180,7 +180,7 @@ const login = async (req, res) => {
 			optUser:   user.optUser,
 		});
 	} catch (e) {
-		if (e.code !== 401) {
+		if (e.status !== 401) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/auth/login): ${e.message}\n\n`
 			);
@@ -279,7 +279,7 @@ const updateUserData = async (req, res) => {
 			message: "Profile updated successfully",
 		});
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/auth/updateUserData): ${e.message}\n\n`
 			);
@@ -315,7 +315,7 @@ const changePassword = async (req, res) => {
 			message: "Password changed successfully",
 		});
 	} catch (e) {
-		if (e.code !== 404 && e.code !== 401) {
+		if (e.status !== 404 && e.status !== 401) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/auth/changePassword): ${e.message}\n\n`
 			);
@@ -390,7 +390,7 @@ const restorePassword = async (req, res) => {
 			message: "Password restored successfully",
 		});
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/auth/restorePassword): ${e.message}\n\n`
 			);
@@ -417,7 +417,7 @@ const restorePasswordStep2 = async (req, res) => {
 			message: "Password restored successfully (step 2)",
 		});
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/auth/restorePasswordStep2): ${e.message}\n\n`
 			);

@@ -83,7 +83,7 @@ const deleteById = async (req, res) => {
 			message: "Delete success"
 		})
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/feedback/deleteById): ${e.message}\n\n`
 			);

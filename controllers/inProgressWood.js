@@ -40,7 +40,7 @@ const getById = async (req, res) => {
 		}
 		res.json(result);
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/inProgressWood/getById): ${e.message}\n\n`
 			);
@@ -74,7 +74,7 @@ const updateById = async (req, res) => {
 		}
 		res.json(result);
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/inProgressWood/updateById): ${e.message}\n\n`
 			);
@@ -93,7 +93,7 @@ const updateCheked = async (req, res) => {
 		}
 		res.json(result);
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/inProgressWood/updateCheked): ${e.message}\n\n`
 			);
@@ -114,7 +114,7 @@ const deleteById = async (req, res) => {
 			message: "Delete success"
 		})
 	} catch (e) {
-		if (e.code !== 404) {
+		if (e.status !== 404) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/inProgressWood/deleteById): ${e.message}\n\n`
 			);
