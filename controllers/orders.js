@@ -150,6 +150,34 @@ const updateCheked = async (req, res) => {
 	}
 }
 
+const updateStatus = async (req, res) => {
+	try {
+		const {id} = req.params;
+		const {status} = req.body;
+
+		if (status === undefined) {
+			throw HttpError(400, "Missing required field: status");
+		}
+
+		const result = await orders.findByIdAndUpdate(
+			id,
+			{status},
+			{new: true, runValidators: true}
+		);
+
+		if (!result) {
+			throw HttpError(404, "Not found");
+		}
+		res.json(result);
+	} catch (e) {
+		if (e.status !== 404) {
+			await sendTelegramMessage(`❌ Помилка (Backend. controllers/orders/updateStatus): ${e.message}\n\n`);
+		}
+		console.error(e);
+		throw e;
+	}
+}
+
 const deleteById = async (req, res) => {
 	try {
 		const {id} = req.params;
@@ -209,5 +237,6 @@ module.exports = {
 	add:          ctrlWrapper(add),
 	updateById:   ctrlWrapper(updateById),
 	updateCheked: ctrlWrapper(updateCheked),
+	updateStatus: ctrlWrapper(updateStatus),
 	deleteById:   ctrlWrapper(deleteById),
 }

@@ -19,6 +19,7 @@ router.get("/:id", authenticate, isValidId, ctrl.getById);
 router.put("/:id", authenticate, isValidId, validateBody(schemas.addSchema), ctrl.updateById);
 
 router.patch("/:id/checked", authenticate, isValidId, validateBody(schemas.updateChekedSchema), ctrl.updateCheked);
+router.patch("/:id/status", authenticate, isValidId, validateBody(schemas.updateStatusSchema), ctrl.updateStatus);
 
 router.delete("/:id", authenticate, isValidId, ctrl.deleteById);
 

@@ -146,9 +146,14 @@ const updateChekedSchema = Joi.object({
 	checked: Joi.boolean().required(),
 })
 
+const updateStatusSchema = Joi.object({
+	status: Joi.string().valid(...statusList).required(),
+}).unknown(false);
+
 const schemas = {
 	addSchema,
 	updateChekedSchema,
+	updateStatusSchema,
 }
 
 const orders = model("orders", ordersSchema)
