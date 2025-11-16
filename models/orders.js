@@ -121,7 +121,7 @@ const addSchema = Joi.object({
 	city:           Joi.string().required(),
 	warehouse:      Joi.string(),
 	paymentMethod:  Joi.string().required(),
-	comments:       Joi.string(),
+	comments:       Joi.string().empty('').allow( null),
 	amount:         Joi.number().required(),
 	deliveryMethod: Joi.string().required(),
 	status:         Joi.string().valid(...statusList).required(),
