@@ -105,7 +105,12 @@ const ordersSchema = new Schema({
 			sale:      {
 				type:     Boolean,
 				required: false
-			}
+			},
+			isChecked:      {
+				type:     Boolean,
+				required: false,
+				default:  false,
+			},
 		},
 	],
 }, {versionKey: false, timestamps: true})
@@ -137,13 +142,15 @@ const addSchema = Joi.object({
 		amount:    Joi.number().required(),
 		images:    Joi.string(),
 		code:      Joi.string().required(),
-		sale:      Joi.bool()
+		sale:      Joi.bool(),
+		isChecked: Joi.bool().default(false),
 	})).required()
 
 })
 
-const updateChekedSchema = Joi.object({
-	checked: Joi.boolean().required(),
+const updateCheckedSchema = Joi.object({
+	productId: Joi.string().required(),
+	isChecked: Joi.boolean().required(),
 })
 
 const updateStatusSchema = Joi.object({
@@ -152,7 +159,7 @@ const updateStatusSchema = Joi.object({
 
 const schemas = {
 	addSchema,
-	updateChekedSchema,
+	updateCheckedSchema,
 	updateStatusSchema,
 }
 

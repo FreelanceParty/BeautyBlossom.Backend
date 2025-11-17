@@ -131,18 +131,28 @@ const updateById = async (req, res) => {
 
 // };
 
-const updateCheked = async (req, res) => {
+const updateChecked = async (req, res) => {
 	try {
 		const {id} = req.params;
-		const result = await orders.findByIdAndUpdate(id, req.body, {new: true});
-		if (!result) {
+		const {productId, isChecked} = req.body;
+		const order = await orders.findById(id);
+		if (!order) {
 			throw HttpError(404, "Not found");
 		}
-		res.json(result);
+		const itemToUpdate = order.orderedItems.find(item =>
+			item.productId.toString() === productId
+		);
+		if (!itemToUpdate) {
+			throw HttpError(404, "Not found");
+		}
+		itemToUpdate.isChecked = isChecked;
+		order.markModified('orderedItems');
+		await order.save();
+		res.json(order);
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/orders/updateCheked): ${e.message}\n\n`
+				`❌ Помилка (Backend. controllers/orders/updateChecked): ${e.message}\n\n`
 			);
 		}
 		console.error(e);
@@ -231,12 +241,12 @@ const deleteById = async (req, res) => {
 // }
 
 module.exports = {
-	getAllbyUser: ctrlWrapper(getAllbyUser),
-	getAll:       ctrlWrapper(getAll),
-	getById:      ctrlWrapper(getById),
-	add:          ctrlWrapper(add),
-	updateById:   ctrlWrapper(updateById),
-	updateCheked: ctrlWrapper(updateCheked),
-	updateStatus: ctrlWrapper(updateStatus),
-	deleteById:   ctrlWrapper(deleteById),
+	getAllbyUser:  ctrlWrapper(getAllbyUser),
+	getAll:        ctrlWrapper(getAll),
+	getById:       ctrlWrapper(getById),
+	add:           ctrlWrapper(add),
+	updateById:    ctrlWrapper(updateById),
+	updateChecked: ctrlWrapper(updateChecked),
+	updateStatus:  ctrlWrapper(updateStatus),
+	deleteById:    ctrlWrapper(deleteById),
 }
