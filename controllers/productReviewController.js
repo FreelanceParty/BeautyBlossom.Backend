@@ -5,7 +5,14 @@ const sendTelegramMessage = require("../helpers/telegram");
 
 const add = async (req, res) => {
 	try {
-		const result = await ProductReview.create({...req.body});
+		const {body} = req;
+		const dataToSave = {...body};
+		if (req.file) {
+			const file = req.file;
+
+			dataToSave.image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+		}
+		const result = await ProductReview.create(dataToSave);
 		res.status(201).json(result);
 	} catch (e) {
 		await sendTelegramMessage(
