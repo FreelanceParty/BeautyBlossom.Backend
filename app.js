@@ -16,6 +16,8 @@ const searchUserRouter = require("./routes/api/searchUser");
 const brandsRouter = require("./routes/api/brands");
 const conversionRouter = require("./routes/api/conversion");
 const productReviewsRouter = require("./routes/api/productReviews");
+const filtersRouter = require("./routes/api/filters");
+const productFiltersRouter = require("./routes/api/productFilters");
 
 const path = require("path");
 
@@ -48,7 +50,7 @@ app.use(cors());
 //   res.sendFile(path.join(__dirname, "index.html"));
 // });
 // app.use(express.static("public"));
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({extended: false}));
 // якщо прийде запит за файли бери його з папки паблік
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
@@ -62,18 +64,19 @@ app.use("/api/inProgressWood", inProgressWood);
 app.use("/api/basket", basket);
 app.use("/api/conversion", conversionRouter);
 app.use("/api/productReviews", productReviewsRouter);
+app.use("/api/filters", filtersRouter);
+app.use("/api/productFilters", productFiltersRouter);
 
 app.use("/api/email", emailRouter);
 app.use("/api/searchUser", searchUserRouter);
 
 app.use(async (req, res, next) => {
-  const { method, url } = req; // метод та url беремо з реквесту
-  const date = moment().format("DD-MM-YYYY_hh:mm:ss");
-  const logData = `\n${method} ${url} ${date}`;
-  //  \n щоб писало з нової строки
-  await fs.appendFile("./public/server.log", logData);
+	const {method, url} = req; // метод та url беремо з реквесту
+	const date = moment().format("DD-MM-YYYY_hh:mm:ss");
+	const logData = `\n${method} ${url} ${date}`;
+	await fs.appendFile("./public/server.log", logData);
 
-  next(); // щоб експерес продовжував далі працювати ставимо некст.
+	next(); // щоб експерес продовжував далі працювати ставимо некст.
 });
 
 // app.get('/', async(request, responce) => {
@@ -81,13 +84,13 @@ app.use(async (req, res, next) => {
 // })
 
 app.use((req, res) => {
-  res.status(404).json({
-    message: "Not found",
-  });
+	res.status(404).json({
+		message: "Not found",
+	});
 });
 app.use((err, req, res, next) => {
-  const { status = 500, message = "Server error" } = err;
-  res.status(status).json({ message });
+	const {status = 500, message = "Server error"} = err;
+	res.status(status).json({message});
 });
 
 module.exports = app;
