@@ -17,7 +17,6 @@ const brandsRouter = require("./routes/api/brands");
 const conversionRouter = require("./routes/api/conversion");
 const productReviewsRouter = require("./routes/api/productReviews");
 const filtersRouter = require("./routes/api/filters");
-const productFiltersRouter = require("./routes/api/productFilters");
 
 const path = require("path");
 
@@ -65,7 +64,6 @@ app.use("/api/basket", basket);
 app.use("/api/conversion", conversionRouter);
 app.use("/api/productReviews", productReviewsRouter);
 app.use("/api/filters", filtersRouter);
-app.use("/api/productFilters", productFiltersRouter);
 
 app.use("/api/email", emailRouter);
 app.use("/api/searchUser", searchUserRouter);

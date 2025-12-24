@@ -41,6 +41,7 @@ const goodsSchema = new Schema({
 	//     enum: statusList,
 	//     required: true,
 	// }
+	filterTagIds: String,
 }, {versionKey: false, timestamps: true});
 
 goodsSchema.post('save', handleMongooseError);
@@ -66,6 +67,7 @@ const addSchema = Joi.object({
 	category:       Joi.string().required(),
 	subCategory:    Joi.string().allow('').optional(),
 	subSubCategory: Joi.string().allow('').optional(),
+	filterTagIds: Joi.string().allow('').optional(),
 });
 
 const updateChekedSchema = Joi.object({
