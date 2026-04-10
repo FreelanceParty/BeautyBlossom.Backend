@@ -87,7 +87,7 @@ const registerSchema = Joi.object({
   lastName: Joi.string().required(),
   city: Joi.string(),
   number: Joi.number(),
-  link: Joi.string(),
+  link: Joi.string().allow(''),
   isAdmin: Joi.boolean(),
   socialMedia: Joi.boolean(),
   onlineShop: Joi.boolean(),
