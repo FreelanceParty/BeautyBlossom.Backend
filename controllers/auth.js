@@ -260,6 +260,32 @@ const updateUserData = async (req, res) => {
 			throw HttpError(404, "User not found");
 		}
 
+		if (email && email !== user.email) {
+			const existingEmailUser = await User.findOne({
+				email,
+				_id: {$ne: _id},
+			});
+			if (existingEmailUser) {
+				throw HttpError(409, "Email already in use", {
+					code: "EMAIL_TAKEN",
+					meta: {field: "email"},
+				});
+			}
+		}
+
+		if (number && number !== user.number) {
+			const existingNumberUser = await User.findOne({
+				number,
+				_id: {$ne: _id},
+			});
+			if (existingNumberUser) {
+				throw HttpError(409, "The phone number is already in use", {
+					code: "PHONE_TAKEN",
+					meta: {field: "number"},
+				});
+			}
+		}
+
 		// Оновлення даних профілю користувача
 		if (firstName) {
 			user.firstName = firstName;
@@ -279,13 +305,13 @@ const updateUserData = async (req, res) => {
 			message: "Profile updated successfully",
 		});
 	} catch (e) {
-		if (e.status !== 404) {
+		if (![400, 404, 409].includes(e.status)) {
 			await sendTelegramMessage(
 				`❌ Помилка (Backend. controllers/auth/updateUserData): ${e.message}\n\n`
 			);
 		}
 		console.error(e);
-		throw HttpError(500, "Internal Server Error");
+		throw e;
 	}
 };
 

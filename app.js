@@ -88,7 +88,10 @@ app.use((req, res) => {
 });
 app.use((err, req, res, next) => {
 	const {status = 500, message = "Server error"} = err;
-	res.status(status).json({message});
+	const payload = {message};
+	if (err.code) payload.code = err.code;
+	if (err.meta) payload.meta = err.meta;
+	res.status(status).json(payload);
 });
 
 module.exports = app;

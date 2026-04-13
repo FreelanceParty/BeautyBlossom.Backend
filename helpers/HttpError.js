@@ -6,9 +6,16 @@ const errorMessageList = {
     409: "Conflict"
 }
 
-const HttpError = (status, message = errorMessageList[status]) => {
+const HttpError = (status, message = errorMessageList[status], options = {}) => {
     const error = new Error(message);
     error.status = status;
+
+    if (options && typeof options === "object") {
+        const { code, meta } = options;
+        if (code) error.code = code;
+        if (meta) error.meta = meta;
+    }
+
     return error;
 }
 
