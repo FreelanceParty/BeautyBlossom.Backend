@@ -22,6 +22,7 @@ router.post("/", validateBody(schemas.addSchema), ctrl.add);
 router.put("/:id", isValidId, validateBody(schemas.addSchema), ctrl.updateById);
 
 router.patch("/:id/checked", isValidId, validateBody(schemas.updateChekedSchema), ctrl.updateCheked);
+router.patch("/:id/amount", isValidId, validateBody(schemas.updateAmountSchema), ctrl.updateAmount);
 
 router.delete("/:id", isValidId, ctrl.deleteById);
 

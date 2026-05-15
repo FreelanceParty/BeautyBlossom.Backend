@@ -234,6 +234,34 @@ const updateCheked = async (req, res) => {
 	}
 };
 
+const updateAmount = async (req, res) => {
+	try {
+		const {id} = req.params;
+		const {amount} = req.body;
+
+		if (amount === undefined) {
+			throw HttpError(400, "Missing required field: amount");
+		}
+
+		const result = await Goods.findByIdAndUpdate(
+			id,
+			{amount},
+			{new: true, runValidators: true}
+		);
+
+		if (!result) {
+			throw HttpError(404, "Not found");
+		}
+		res.json(result);
+	} catch (e) {
+		if (e.status !== 404) {
+			await sendTelegramMessage(`❌ Помилка (Backend. controllers/goods/updateAmount): ${e.message}\n\n`);
+		}
+		console.error(e);
+		throw e;
+	}
+}
+
 const deleteById = async (req, res) => {
 	try {
 		const {id} = req.params;
@@ -443,6 +471,7 @@ module.exports = {
 	add:             ctrlWrapper(add),
 	updateById:      ctrlWrapper(updateById),
 	updateCheked:    ctrlWrapper(updateCheked),
+	updateAmount:    ctrlWrapper(updateAmount),
 	deleteById:      ctrlWrapper(deleteById),
 	getCSV:          ctrlWrapper(getCSV),
 	getXML:          ctrlWrapper(getXML),
