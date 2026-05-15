@@ -39,15 +39,22 @@ const register = async (req, res) => {
 		const avatarURL = gravatar.url(email);
 		const verificationCode = nanoid();
 
-		// Передайте адмінські права, якщо відповідний користувач
-		const isAdmin = req.body.isAdmin;
-
 		const newUser = await User.create({
-			...req.body,
-			password: hashPassword,
+			email,
+			password:    hashPassword,
+			number,
+			firstName:   req.body.firstName,
+			lastName:    req.body.lastName,
+			country:     req.body.country,
+			city:        req.body.city,
+			link:        req.body.link,
+			offlineShop: req.body.offlineShop,
+			onlineShop:  req.body.onlineShop,
+			socialMedia: req.body.socialMedia,
+			optUser:     req.body.optUser,
 			avatarURL,
 			verificationCode,
-			isAdmin:  isAdmin,
+			isAdmin:     false,
 		});
 
 		const message = {
@@ -382,7 +389,9 @@ const changePassword = async (req, res) => {
 const restorePassword = async (req, res) => {
 	try {
 		const {email} = req.body;
-
+		if (!email) {
+			throw createError(400, "Email is required");
+		}
 		const generateNewPassword = () => {
 			const length = 10; // Довжина нового пароля
 			const charset =

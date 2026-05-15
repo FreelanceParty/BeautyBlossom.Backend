@@ -2,7 +2,7 @@ const express = require("express");
 
 const ctrl = require("../../controllers/orders");
 
-const {validateBody, isValidId, authenticate} = require("../../middlewares");
+const {validateBody, isValidId, authenticate, optionalAuthenticate} = require("../../middlewares");
 
 const {schemas} = require("../../models/orders");
 
@@ -12,7 +12,7 @@ router.get("/byUser", authenticate, ctrl.getAllbyUser);
 
 router.get("/", authenticate, ctrl.getAll);
 
-router.post("/", authenticate, validateBody(schemas.addSchema), ctrl.add);
+router.post("/", optionalAuthenticate, validateBody(schemas.addSchema), ctrl.add);
 
 router.get("/:id", authenticate, isValidId, ctrl.getById);
 

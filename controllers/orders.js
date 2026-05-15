@@ -33,8 +33,29 @@ const getAll = async (req, res) => {
 const add = async (req, res) => {
 
 	try {
-		const owner = req.user ? req.user._id : null; // Якщо req.user визначений, то беремо його _id, інакше owner = null
-		const result = await orders.create({...req.body, owner});
+		const owner = req.user ? req.user._id : null; // guest checkout дозволений
+		const payload = {
+			email: req.body.email,
+			firstName: req.body.firstName,
+			lastName: req.body.lastName,
+			number: req.body.number,
+			city: req.body.city,
+			warehouse: req.body.warehouse,
+			paymentMethod: req.body.paymentMethod,
+			comments: req.body.comments,
+			amount: req.body.amount,
+			deliveryMethod: req.body.deliveryMethod,
+			status: req.body.status,
+			address: req.body.address,
+			building: req.body.building,
+			apartment: req.body.apartment,
+			isOptUser: req.body.isOptUser,
+			orderNumber: req.body.orderNumber,
+			orderedItems: req.body.orderedItems,
+		};
+		if (owner) payload.owner = owner;
+
+		const result = await orders.create(payload);
 		//  const result = await Wood.create({...req.body});
 
 		res.status(201).json(result);

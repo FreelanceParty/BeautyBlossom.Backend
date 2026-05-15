@@ -2,7 +2,7 @@ const express = require("express");
 
 const ctrl = require("../../controllers/goods");
 
-const {validateBody, isValidId,} = require("../../middlewares");
+const {validateBody, isValidId, authenticate, requireAdmin} = require("../../middlewares");
 
 const {schemas} = require("../../models/goods");
 
@@ -11,20 +11,23 @@ const router = express.Router();
 router.get("/googlefeed", ctrl.getXML);
 router.get("/products", ctrl.getCSV);
 
-router.get("/", ctrl.getAll);
-router.get("/:id", ctrl.getById);
+router.get("/search", ctrl.search);
+
 router.get("/findByName/:name", ctrl.findByName);
 router.get("/findByBrandName/:brandName", ctrl.findByBrandName);
 router.get("/findByCategory/:category", ctrl.findByCategory);
 
-router.post("/", validateBody(schemas.addSchema), ctrl.add);
+router.get("/", ctrl.getAll);
+router.get("/:id", ctrl.getById);
 
-router.put("/:id", isValidId, validateBody(schemas.addSchema), ctrl.updateById);
+router.post("/", authenticate, requireAdmin, validateBody(schemas.addSchema), ctrl.add);
 
-router.patch("/:id/checked", isValidId, validateBody(schemas.updateChekedSchema), ctrl.updateCheked);
-router.patch("/:id/amount", isValidId, validateBody(schemas.updateAmountSchema), ctrl.updateAmount);
+router.put("/:id", authenticate, requireAdmin, isValidId, validateBody(schemas.addSchema), ctrl.updateById);
 
-router.delete("/:id", isValidId, ctrl.deleteById);
+router.patch("/:id/checked", authenticate, requireAdmin, isValidId, validateBody(schemas.updateChekedSchema), ctrl.updateCheked);
+router.patch("/:id/amount", authenticate, requireAdmin, isValidId, validateBody(schemas.updateAmountSchema), ctrl.updateAmount);
+
+router.delete("/:id", authenticate, requireAdmin, isValidId, ctrl.deleteById);
 
 module.exports = router;
 

@@ -6,6 +6,7 @@ const {HttpError, ctrlWrapper} = require("../helpers");
 const xml2js = require("xml2js");
 const {transliterate} = require("../utils/transliterate");
 const sendTelegramMessage = require("../helpers/telegram");
+const {getGoodsIndex, toMeiliGoodsDoc} = require("../helpers/meili");
 
 // const getAll = async (req, res) => {
 
@@ -27,6 +28,7 @@ const getAll = async (req, res) => {
 		      } = req.query;
 
 		const query = {};
+
 		const normalize = (val) => val?.trim();
 
 		if (brand) {
@@ -185,6 +187,13 @@ const add = async (req, res) => {
 	try {
 		const {_id: owner} = req.user;
 		const result = await Goods.create({...req.body, owner});
+		try {
+			const index = getGoodsIndex();
+			if (index) {
+				await index.addDocuments([toMeiliGoodsDoc(result)]);
+			}
+		} catch {
+		}
 		//  const result = await Wood.create({...req.body});
 		res.status(201).json(result);
 	} catch (e) {
@@ -202,6 +211,13 @@ const updateById = async (req, res) => {
 		const result = await Goods.findByIdAndUpdate(id, req.body, {new: true});
 		if (!result) {
 			throw HttpError(404, "Not found");
+		}
+		try {
+			const index = getGoodsIndex();
+			if (index) {
+				await index.addDocuments([toMeiliGoodsDoc(result)]);
+			}
+		} catch {
 		}
 		res.json(result);
 	} catch (e) {
@@ -269,6 +285,13 @@ const deleteById = async (req, res) => {
 		if (!result) {
 			throw HttpError(404, "Not found");
 		}
+		try {
+			const index = getGoodsIndex();
+			if (index) {
+				await index.deleteDocument(result._id.toString());
+			}
+		} catch {
+		}
 		res.json({
 			message: "Delete success",
 		});
@@ -278,6 +301,37 @@ const deleteById = async (req, res) => {
 				`❌ Помилка (Backend. controllers/goods/deleteById): ${e.message}\n\n`
 			);
 		}
+		console.error(e);
+		throw e;
+	}
+};
+
+const search = async (req, res) => {
+	try {
+		const {q = "", limit = 40} = req.query;
+		const query = String(q || "").trim();
+		if (!query) {
+			return res.json({hits: [], query});
+		}
+
+		const index = getGoodsIndex();
+		if (index) {
+			const result = await index.search(query, {
+				limit: Math.min(parseInt(limit) || 40, 200),
+			});
+			return res.json(result);
+		}
+
+		const words = query.split(/\s+/).filter(Boolean);
+		const and = words.map((w) => ({name: {$regex: w, $options: "i"}}));
+		const goods = await Goods.find({$and: and}).limit(
+			Math.min(parseInt(limit) || 40, 200)
+		);
+		res.json({hits: goods, query});
+	} catch (e) {
+		await sendTelegramMessage(
+			`❌ Помилка (Backend. controllers/goods/search): ${e.message}\n\n`
+		);
 		console.error(e);
 		throw e;
 	}
@@ -415,9 +469,20 @@ const getXML = async (req, res) => {
 const findByName = async (req, res) => {
 	try {
 		const {name} = req.params;
-		const result = await Goods.find({
-			name: {$regex: name, $options: "i"}
-		});
+		const query = String(name || "").trim();
+		if (!query) {
+			return res.json([]);
+		}
+
+		const index = getGoodsIndex();
+		if (index) {
+			const result = await index.search(query, {limit: 200});
+			return res.json(result.hits || []);
+		}
+
+		const words = query.split(/\s+/).filter(Boolean);
+		const and = words.map((w) => ({name: {$regex: w, $options: "i"}}));
+		const result = await Goods.find({$and: and}).limit(200);
 		res.json(result);
 	} catch (e) {
 		await sendTelegramMessage(
@@ -468,6 +533,7 @@ const findByCategory = async (req, res) => {
 module.exports = {
 	getAll:          ctrlWrapper(getAll),
 	getById:         ctrlWrapper(getById),
+	search:          ctrlWrapper(search),
 	add:             ctrlWrapper(add),
 	updateById:      ctrlWrapper(updateById),
 	updateCheked:    ctrlWrapper(updateCheked),
