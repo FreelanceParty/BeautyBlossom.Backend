@@ -7,19 +7,31 @@ const {HttpError, ctrlWrapper} = require("../helpers");
 const sendTelegramMessage = require("../helpers/telegram");
 
 const getAll = async (req, res) => {
-	try { // const {_id: owner} = req.user; // щоб отримува тіоьки той хто створив
-		// const {page = 1, limit = 10} = req.query;
-		// req.query обєкт параметрів пошуку
-		// const skip = (page - 1) * limit;
-		const result = await orders.find();
-		// const result = await inProgressDesk.find();
-		// const result = await inProgressDesk.find({owner}, "-createdAt -updatedAt", {skip, limit}).populate("owner", "name email");
+	try {
+		const page = Math.max(1, Number(req.query.page) || 1);
+		const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 16));
+		const skip = (page - 1) * limit;
+		const withMeta = String(req.query.withMeta || "").toLowerCase() === "true";
 
-		// const result = await orders.find({owner}, "-createdAt -updatedAt").populate("owner", "name email");
-		// -createdAt -updatedAt поля які не треба брати з бази
-		// populate бере айді знаходить овенра і вставляє обєкт з його данними
-		// 2 арг список полів які треба повернути
-		// skip скілеи пропустити обєктів в базі, limit скільки повернути
+		const [total, result] = await Promise.all([
+			orders.countDocuments(),
+			orders.find().sort({createdAt: -1}).skip(skip).limit(limit),
+		]);
+
+		const pages = Math.max(1, Math.ceil(total / limit));
+		res.set("X-Total-Count", String(total));
+		res.set("X-Total-Pages", String(pages));
+		res.set("X-Page", String(page));
+		res.set("X-Limit", String(limit));
+
+		if (withMeta) {
+			res.json({
+				items: result,
+				meta:  {total, pages, page, limit},
+			});
+			return;
+		}
+
 		res.json(result);
 	} catch (e) {
 		await sendTelegramMessage(
@@ -35,25 +47,27 @@ const add = async (req, res) => {
 	try {
 		const owner = req.user ? req.user._id : null; // guest checkout дозволений
 		const payload = {
-			email: req.body.email,
-			firstName: req.body.firstName,
-			lastName: req.body.lastName,
-			number: req.body.number,
-			city: req.body.city,
-			warehouse: req.body.warehouse,
-			paymentMethod: req.body.paymentMethod,
-			comments: req.body.comments,
-			amount: req.body.amount,
+			email:          req.body.email,
+			firstName:      req.body.firstName,
+			lastName:       req.body.lastName,
+			number:         req.body.number,
+			city:           req.body.city,
+			warehouse:      req.body.warehouse,
+			paymentMethod:  req.body.paymentMethod,
+			comments:       req.body.comments,
+			amount:         req.body.amount,
 			deliveryMethod: req.body.deliveryMethod,
-			status: req.body.status,
-			address: req.body.address,
-			building: req.body.building,
-			apartment: req.body.apartment,
-			isOptUser: req.body.isOptUser,
-			orderNumber: req.body.orderNumber,
-			orderedItems: req.body.orderedItems,
+			status:         req.body.status,
+			address:        req.body.address,
+			building:       req.body.building,
+			apartment:      req.body.apartment,
+			isOptUser:      req.body.isOptUser,
+			orderNumber:    req.body.orderNumber,
+			orderedItems:   req.body.orderedItems,
 		};
-		if (owner) payload.owner = owner;
+		if (owner) {
+			payload.owner = owner;
+		}
 
 		const result = await orders.create(payload);
 		//  const result = await Wood.create({...req.body});
@@ -70,9 +84,32 @@ const add = async (req, res) => {
 
 const getAllbyUser = async (req, res) => {
 	try {
-		const {user} = req; // Припустимо, що ви отримуєте інформацію про користувача з middleware
+		const {user} = req;
 		const userId = user._id.toString().trim();
-		const userOrders = await orders.find({owner: userId});
+
+		const page = Math.max(1, Number(req.query.page) || 1);
+		const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 16));
+		const skip = (page - 1) * limit;
+		const withMeta = String(req.query.withMeta || "").toLowerCase() === "true";
+
+		const [total, userOrders] = await Promise.all([
+			orders.countDocuments({owner: userId}),
+			orders.find({owner: userId}).sort({createdAt: -1}).skip(skip).limit(limit),
+		]);
+
+		const pages = Math.max(1, Math.ceil(total / limit));
+		res.set("X-Total-Count", String(total));
+		res.set("X-Total-Pages", String(pages));
+		res.set("X-Page", String(page));
+		res.set("X-Limit", String(limit));
+
+		if (withMeta) {
+			res.json({
+				items: userOrders,
+				meta:  {total, pages, page, limit},
+			});
+			return;
+		}
 
 		res.json(userOrders);
 	} catch (e) {
