@@ -16,6 +16,14 @@ const goodsSchema = new Schema({
 	country:      String,
 	availability: String,
 	id:           Number,
+	reviewsCount: {
+		type:    Number,
+		default: 0,
+	},
+	reviewsAvg:   {
+		type:    Number,
+		default: 0,
+	},
 
 	title:     String,
 	condition: String,

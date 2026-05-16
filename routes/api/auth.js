@@ -26,7 +26,7 @@ router.post("/updateUserData/:id", authenticate, ctrl.updateUserData);
 
 router.post("/changePassword", authenticate, ctrl.changePassword);
 
-router.post("/restorePassword", authenticate, ctrl.restorePassword);
+router.post("/restorePassword", ctrl.restorePassword);
 
 router.post("/restorePasswordStep2", authenticate, ctrl.restorePasswordStep2);
 
