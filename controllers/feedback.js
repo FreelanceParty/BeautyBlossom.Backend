@@ -4,21 +4,15 @@ const {feedback} = require('../models/feedback')
 
 const {HttpError, ctrlWrapper} = require("../helpers");
 
+const mongoose = require("mongoose");
+
 const sendTelegramMessage = require("../helpers/telegram");
 
 const getAll = async (req, res) => {
-	try { // const {_id: owner} = req.user;
-		// const {page = 1, limit = 10} = req.query;
-		// req.query обєкт параметрів пошуку
-		// const skip = (page - 1) * limit;
-		const result = await feedback.find();
-
-		// const result = await Wood.find({owner}, "-createdAt -updatedAt", {skip, limit}).populate("owner", "name email");
-
-		// -createdAt -updatedAt поля які не треба брати з бази
-		// populate бере айді знаходить овенра і вставляє обєкт з його данними
-		// 2 арг список полів які треба повернути
-		// skip скілки пропустити обєктів в базі, limit скільки повернути
+	try {
+		const result = await feedback
+			.find()
+			.populate("owner", "email firstName lastName number");
 		res.json(result);
 	} catch (e) {
 		await sendTelegramMessage(
@@ -41,7 +35,7 @@ const getAll = async (req, res) => {
 
 const add = async (req, res) => {
 	try {
-		const {_id: owner} = req.user;
+		const owner = new mongoose.Types.ObjectId(String(req.user._id));
 		const result = await feedback.create({...req.body, owner});
 		//  const result = await Wood.create({...req.body});
 		res.status(201).json(result);
