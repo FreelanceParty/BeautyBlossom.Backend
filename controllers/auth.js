@@ -14,6 +14,8 @@ const {User} = require("../models/user");
 const mailer = require("./mailer");
 // const { HttpError, ctrlWrapper, sendEmail } = require("../helpers");
 
+const {escapeHtml, wrapWithBrandedLayout, getBrandedLogoAttachment} = require("../helpers/emailTemplate");
+
 // const { HttpError, ctrlWrapper } = require("../helpers");
 
 const {SECRET_KEY} = process.env;
@@ -72,14 +74,27 @@ const register = async (req, res) => {
 	        +380500529100
 	        beautyblossom.opt@gmail.com`,
 		};
-		mailer(message);
-		// const verifyEmail = {
-		//     to: email,
-		//     subject: "Verify email",
-		//     html: `<a target="_blank" href="${BASE_URL}/api/auth/verify/${verificationCode}">Click verify email</a>`
-		// };
 
-		// await sendEmail(verifyEmail);
+		setImmediate(() => {
+			(async () => {
+				const contentHtml = `
+					<div style="font-size:14px;line-height:20px;color:#111827;white-space:pre-wrap;">${escapeHtml(message.text)}</div>
+				`;
+				const html = wrapWithBrandedLayout({
+					title: "Вітаємо у Beauty Blossom",
+					contentHtml,
+					cta: {url: "https://beautyblossom.com.ua/", label: "Перейти на сайт"},
+				});
+				let attachments;
+				try {
+					attachments = [await getBrandedLogoAttachment()];
+				} catch (e) {
+					attachments = undefined;
+				}
+				await mailer({...message, html, attachments});
+			})().catch(() => {
+			});
+		});
 
 		res.status(201).json({
 			email:     newUser.email,
@@ -419,7 +434,33 @@ const restorePassword = async (req, res) => {
 			subject: "Beauty-blossom - відновлення пароля",
 			text:    `Ваш новий пароль на Beauty blossom: ${newPassword}`,
 		};
-		mailer(message);
+
+		setImmediate(() => {
+			Promise.resolve()
+				.then(async () => {
+					const contentHtml = `
+						<div style="font-size:14px;line-height:20px;color:#111827;">Ваш новий пароль:</div>
+						<div style="height:10px;line-height:10px;">&nbsp;</div>
+						<div style="padding:12px 14px;border:1px dashed #e5e7eb;border-radius:12px;background:#ffffff;font-family:Arial,sans-serif;font-size:16px;font-weight:700;letter-spacing:0.2px;">${escapeHtml(newPassword)}</div>
+						<div style="height:10px;line-height:10px;">&nbsp;</div>
+						<div style="font-size:13px;line-height:18px;color:#6b7280;">Якщо ви не запитували зміну пароля — просто проігноруйте цей лист.</div>
+					`;
+					const html = wrapWithBrandedLayout({
+						title: "Відновлення пароля",
+						contentHtml,
+						cta: {url: "https://beautyblossom.com.ua/", label: "Перейти на сайт"},
+					});
+					let attachments;
+					try {
+						attachments = [await getBrandedLogoAttachment()];
+					} catch (e) {
+						attachments = undefined;
+					}
+					await mailer({...message, html, attachments});
+				})
+				.catch(() => {
+				});
+		});
 
 		res.json({
 			message: "Password restored successfully",

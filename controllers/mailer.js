@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 const sendTelegramMessage = require("../helpers/telegram");
-const {APP_ENV, EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS} = process.env;
+const {APP_ENV, EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, TEST_EMAIL} = process.env;
 
 const transporter = nodemailer.createTransport({
 	host:   EMAIL_HOST,
@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
 
 const mailer = async (message) => {
 	try {
-		if (APP_ENV === 'local') {
+		if (APP_ENV === 'local' && message.to !== TEST_EMAIL) {
 			return;
 		}
 		await transporter.sendMail({
