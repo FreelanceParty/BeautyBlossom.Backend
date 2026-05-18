@@ -12,8 +12,6 @@ router.get("/googlefeed", ctrl.getXML);
 router.get("/products", ctrl.getCSV);
 
 router.get("/search", ctrl.search);
-
-router.get("/findByName/:name", ctrl.findByName);
 router.get("/findByBrandName/:brandName", ctrl.findByBrandName);
 router.get("/findByCategory/:category", ctrl.findByCategory);
 

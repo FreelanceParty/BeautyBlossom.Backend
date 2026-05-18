@@ -22,6 +22,7 @@ const getAll = async (req, res) => {
 		const {
 			      brand,
 			      category,
+			      search,
 			      sort  = "default",
 			      page  = 1,
 			      limit = 3000,
@@ -30,6 +31,41 @@ const getAll = async (req, res) => {
 		const query = {};
 
 		const normalize = (val) => val?.trim();
+
+		if (search) {
+			const raw = String(search || "").trim();
+			if (raw) {
+				const words = raw.split(/\s+/).filter(Boolean);
+				const and = words.map((w) => {
+					const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+					const rx = new RegExp(escaped, "i");
+					const numeric = /^\d+$/.test(w);
+					const numericValue = numeric ? Number(w) : null;
+					return {
+						$or: [
+							{name: {$regex: rx}},
+							{article: {$regex: rx}},
+							...(numeric
+								? [
+									{code: numericValue},
+									{
+										$expr: {
+											$regexMatch: {
+												input:   {$toString: "$code"},
+												regex:   escaped,
+												options: "i",
+											},
+										},
+									},
+								]
+								: []),
+						],
+					};
+				});
+
+				query.$and = (query.$and || []).concat(and);
+			}
+		}
 
 		if (brand) {
 			const decodedBrand = decodeURIComponent(brand);
