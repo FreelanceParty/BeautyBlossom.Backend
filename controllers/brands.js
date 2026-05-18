@@ -19,8 +19,13 @@ const getAllBrands = async (req, res) => {
 
 const getByBrand = async (req, res) => {
 	try {
+		function escapeRegExp(str = "") {
+			return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+		}
+
 		const {name} = req.params;
-		const result = await Brand.findOne({name: new RegExp(`^${name}$`, "i")});
+		const safe = escapeRegExp(name);
+		const result = await Brand.findOne({name: new RegExp(`^${safe}$`, "i")});
 
 		if (!result) {
 			throw HttpError(404, "Not found");
