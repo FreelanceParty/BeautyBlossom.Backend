@@ -10,7 +10,8 @@ const getAllBrands = async (req, res) => {
 		res.json(result);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/brands/getAllBrands): ${e.message}\n\n`
+			"Backend. controllers/brands/getAllBrands",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -35,7 +36,8 @@ const getByBrand = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/brands/getByBrand): ${e.message}\n\n`
+				"Backend. controllers/brands/getByBrand",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);

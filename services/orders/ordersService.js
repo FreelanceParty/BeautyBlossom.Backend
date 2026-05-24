@@ -198,7 +198,8 @@ const createOrder = async ({userId, body}) => {
 	setImmediate(() => {
 		sendOrderCreatedEmails(order).catch(async (e) => {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. services/orders/createOrder email): ${e.message}\n\n`
+				"Backend. services/orders/createOrder email",
+				`Error: ${e.message}`
 			);
 		});
 	});

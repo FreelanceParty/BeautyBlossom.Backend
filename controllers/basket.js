@@ -29,7 +29,8 @@ const getAll = async (req, res) => {
 		res.json(result);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/basket/getAll): ${e.message}\n\n`
+			"Backend. controllers/basket/getAll",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -48,7 +49,8 @@ const getById = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/basket/getById): ${e.message}\n\n`
+				"Backend. controllers/basket/getById",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
@@ -70,7 +72,8 @@ const add = async (req, res) => {
 		res.status(201).json(result);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/basket/add): ${e.message}\n\n`
+			"Backend. controllers/basket/add",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -94,7 +97,8 @@ const updateById = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/basket/updateById): ${e.message}\n\n`
+				"Backend. controllers/basket/updateById",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
@@ -113,7 +117,8 @@ const updateCheked = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/basket/updateCheked): ${e.message}\n\n`
+				"Backend. controllers/basket/updateCheked",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
@@ -134,7 +139,8 @@ const deleteById = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/basket/deleteById): ${e.message}\n\n`
+				"Backend. controllers/basket/deleteById",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
@@ -154,7 +160,8 @@ const deleteAllByOwner = async (req, res) => {
 		});
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/basket/deleteAllByOwner): ${e.message}\n\n`
+			"Backend. controllers/basket/deleteAllByOwner",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -173,7 +180,8 @@ cron.schedule("0 0 * * *", async () => {
 		console.log(`Deleted ${result.deletedCount} items from the basket.`);
 	} catch (error) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/basket/cron.schedule): ${error.message}\n\n`
+			"Backend. controllers/basket/cron.schedule",
+			`Error: ${error.message}`
 		);
 		console.error("Error deleting expired basket items:", error);
 	}

@@ -8,7 +8,8 @@ const getAll = async (req, res) => {
 		res.json(result);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/filters/getAll): ${e.message}\n\n`
+			"Backend. controllers/filters/getAll",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;

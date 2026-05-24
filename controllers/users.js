@@ -21,7 +21,8 @@ const getUsers = async (req, res) => {
 		res.json(simplifiedData);
 	} catch (error) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/users/getUsers): ${error.message}\n\n`
+			"Backend. controllers/users/getUsers",
+			error.message
 		);
 		console.error(error);
 		res.status(500).json({message: "Internal Server Error"});

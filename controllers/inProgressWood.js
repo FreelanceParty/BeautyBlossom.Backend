@@ -23,7 +23,8 @@ const getAll = async (req, res) => {
 		res.json(result);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/inProgressWood/getAll): ${e.message}\n\n`
+			"Backend. controllers/inProgressWood/getAll",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -42,7 +43,8 @@ const getById = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/inProgressWood/getById): ${e.message}\n\n`
+				"Backend. controllers/inProgressWood/getById",
+				e.message
 			);
 		}
 		console.error(e);
@@ -58,7 +60,8 @@ const add = async (req, res) => {
 		res.status(201).json(result);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/inProgressWood/add): ${e.message}\n\n`
+			"Backend. controllers/inProgressWood/add",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -76,7 +79,8 @@ const updateById = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/inProgressWood/updateById): ${e.message}\n\n`
+				"Backend. controllers/inProgressWood/updateById",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
@@ -95,7 +99,8 @@ const updateCheked = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/inProgressWood/updateCheked): ${e.message}\n\n`
+				"Backend. controllers/inProgressWood/updateCheked",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
@@ -116,44 +121,14 @@ const deleteById = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/inProgressWood/deleteById): ${e.message}\n\n`
+				"Backend. controllers/inProgressWood/deleteById",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
 		throw e;
 	}
 }
-
-// const getAll = async (req, res) => {
-//     const result = await wood.getAll();
-//     res.json(result);
-// }
-
-// const add = async (req, res) => {
-//     const result = await wood.add(req.body);
-//     res.status(201).json(result);
-// }
-
-// const updateById = async (req, res) => {
-//     const { id } = req.params;
-//     const result = await wood.updateById(id, req.body);
-//     if (!result) {
-//         throw HttpError(404, "Not found");
-//     }
-//     res.json(result);
-// }
-
-// const deleteById = async (req, res) => {
-//     const { id } = req.params;
-//     const result = await wood.deleteById(id);
-//     if (!result) {
-//         throw HttpError(404, "Not found");
-//     }
-//     // res.status(204).send()
-//     res.json({
-//         message: "Delete success"
-//     })
-// }
 
 module.exports = {
 	getAll:       ctrlWrapper(getAll),

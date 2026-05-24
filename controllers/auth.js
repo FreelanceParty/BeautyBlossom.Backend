@@ -83,7 +83,7 @@ const register = async (req, res) => {
 				const html = wrapWithBrandedLayout({
 					title: "Вітаємо у Beauty Blossom",
 					contentHtml,
-					cta: {url: "https://beautyblossom.com.ua/", label: "Перейти на сайт"},
+					cta:   {url: "https://beautyblossom.com.ua/", label: "Перейти на сайт"},
 				});
 				let attachments;
 				try {
@@ -150,7 +150,8 @@ const register = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 409) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/auth/register): ${e.message}\n\n`
+				"Backend. controllers/auth/register",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
@@ -204,7 +205,8 @@ const login = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 401) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/auth/login): ${e.message}\n\n`
+				"Backend. controllers/auth/login",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
@@ -227,7 +229,8 @@ const getCurrent = async (req, res) => {
 		});
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/auth/getCurrent): ${e.message}\n\n`
+			"Backend. controllers/auth/getCurrent",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -244,7 +247,8 @@ const logout = async (req, res) => {
 		});
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/auth/logout): ${e.message}\n\n`
+			"Backend. controllers/auth/logout",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -266,7 +270,8 @@ const updateAvatar = async (req, res) => {
 		});
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/auth/updateAvatar): ${e.message}\n\n`
+			"Backend. controllers/auth/updateAvatar",
+			`Error: ${e.message}`
 		);
 	}
 };
@@ -448,7 +453,7 @@ const restorePassword = async (req, res) => {
 					const html = wrapWithBrandedLayout({
 						title: "Відновлення пароля",
 						contentHtml,
-						cta: {url: "https://beautyblossom.com.ua/", label: "Перейти на сайт"},
+						cta:   {url: "https://beautyblossom.com.ua/", label: "Перейти на сайт"},
 					});
 					let attachments;
 					try {

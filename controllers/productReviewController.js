@@ -6,15 +6,17 @@ const sendTelegramMessage = require("../helpers/telegram");
 
 const recomputeGoodsReviewStats = async (productId) => {
 	const numericProductId = Number(productId);
-	if (!Number.isFinite(numericProductId)) return;
+	if (!Number.isFinite(numericProductId)) {
+		return;
+	}
 
 	const [stats] = await ProductReview.aggregate([
 		{$match: {productId: numericProductId}},
 		{
 			$group: {
-				_id: "$productId",
+				_id:   "$productId",
 				count: {$sum: 1},
-				avg: {$avg: "$rate"},
+				avg:   {$avg: "$rate"},
 			},
 		},
 	]);
@@ -43,14 +45,16 @@ const add = async (req, res) => {
 			await recomputeGoodsReviewStats(result.productId);
 		} catch (e) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/productReviewController/recomputeGoodsReviewStats): ${e.message}\n\n`
+				"Backend. controllers/productReviewController/recomputeGoodsReviewStats",
+				e.message
 			);
 			console.error(e);
 		}
 		res.status(201).json(result);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/productReviewController/add): ${e.message}\n\n`
+			"Backend. controllers/productReviewController/add",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -64,7 +68,8 @@ const getAllForProduct = async (req, res) => {
 		res.json(reviews);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/productReviewController/getAllForProduct): ${e.message}\n\n`
+			"Backend. controllers/productReviewController/getAllForProduct",
+			`Error: ${e.message}\nProduct ID: ${req.params.id}`
 		);
 		console.error(e);
 		throw e;
@@ -78,7 +83,8 @@ const getAll = async (req, res) => {
 		res.json(reviews);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/productReviewController/getAll): ${e.message}\n\n`
+			"Backend. controllers/productReviewController/getAll",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;

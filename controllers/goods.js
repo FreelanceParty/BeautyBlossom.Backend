@@ -8,15 +8,6 @@ const {transliterate} = require("../utils/transliterate");
 const sendTelegramMessage = require("../helpers/telegram");
 const {getGoodsIndex, toMeiliGoodsDoc} = require("../helpers/meili");
 
-// const getAll = async (req, res) => {
-
-// const {_id: owner} = req.user;
-// const {page = 1, limit = 10} = req.query;
-// req.query обєкт параметрів пошуку
-// const skip = (page - 1) * limit;
-
-// const result = await Goods.find();
-
 const getAll = async (req, res) => {
 	try {
 		const {
@@ -155,7 +146,8 @@ const getAll = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/goods/getAll): ${e.message}\n\n`
+				"Backend. controllers/goods/getAll",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
@@ -185,7 +177,8 @@ const getNews = async (req, res) => {
 		});
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/goods/getNews): ${e.message}\n\n`
+			"Backend. controllers/goods/getNews",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -211,7 +204,8 @@ const getById = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/goods/getById): ${e.message}\n\n`
+				"Backend. controllers/goods/getById",
+				e.message
 			);
 		}
 		console.error(e);
@@ -234,7 +228,8 @@ const add = async (req, res) => {
 		res.status(201).json(result);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/goods/add): ${e.message}\n\n`
+			"Backend. controllers/goods/add",
+			e.message
 		);
 		console.error(e);
 		throw e;
@@ -259,7 +254,8 @@ const updateById = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/goods/updateById): ${e.message}\n\n`
+				"Backend. controllers/goods/updateById",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
@@ -278,7 +274,8 @@ const updateCheked = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/goods/updateCheked): ${e.message}\n\n`
+				"Backend. controllers/goods/updateCheked",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
@@ -307,7 +304,10 @@ const updateAmount = async (req, res) => {
 		res.json(result);
 	} catch (e) {
 		if (e.status !== 404) {
-			await sendTelegramMessage(`❌ Помилка (Backend. controllers/goods/updateAmount): ${e.message}\n\n`);
+			await sendTelegramMessage(
+				"Backend. controllers/goods/updateAmount",
+				`Error: ${e.message}`
+			);
 		}
 		console.error(e);
 		throw e;
@@ -334,7 +334,8 @@ const deleteById = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/goods/deleteById): ${e.message}\n\n`
+				"Backend. controllers/goods/deleteById",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
@@ -366,7 +367,8 @@ const search = async (req, res) => {
 		res.json({hits: goods, query});
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/goods/search): ${e.message}\n\n`
+			"Backend. controllers/goods/search",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -419,11 +421,12 @@ const getCSV = async (req, res) => {
 		res.header("Content-Type", "text/csv");
 		res.attachment("products.csv");
 		res.status(200).send(csv); // Відправляємо CSV-файл
-	} catch (error) {
+	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/goods/getCSV): ${error.message}\n\n`
+			"Backend. controllers/goods/getCSV",
+			`Error: ${e.message}`
 		);
-		console.error(error);
+		console.error(e);
 		return res.status(500).send("Error generating CSV");
 	}
 };
@@ -491,41 +494,15 @@ const getXML = async (req, res) => {
 		res.setHeader("Expires", "0");
 
 		res.status(200).send(xml);
-	} catch (error) {
-		if (error.code !== 404) {
+	} catch (e) {
+		if (e.code !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/goods/getXML): ${error.message}\n\n`
+				"Backend. controllers/goods/getXML",
+				`Error: ${e.message}`
 			);
 		}
-		console.error(error);
-		return res.status(500).send("Error generating XML");
-	}
-};
-
-const findByName = async (req, res) => {
-	try {
-		const {name} = req.params;
-		const query = String(name || "").trim();
-		if (!query) {
-			return res.json([]);
-		}
-
-		const index = getGoodsIndex();
-		if (index) {
-			const result = await index.search(query, {limit: 200});
-			return res.json(result.hits || []);
-		}
-
-		const words = query.split(/\s+/).filter(Boolean);
-		const and = words.map((w) => ({name: {$regex: w, $options: "i"}}));
-		const result = await Goods.find({$and: and}).limit(200);
-		res.json(result);
-	} catch (e) {
-		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/goods/findByName): ${e.message}\n\n`
-		);
 		console.error(e);
-		throw e;
+		return res.status(500).send("Error generating XML");
 	}
 };
 
@@ -538,7 +515,8 @@ const findByBrandName = async (req, res) => {
 		res.json(result);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/goods/findByBrandName): ${e.message}\n\n`
+			"Backend. controllers/goods/findByBrandName",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -559,7 +537,8 @@ const findByCategory = async (req, res) => {
 		res.json(result);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/goods/findByCategory): ${e.message}\n\n`
+			"Backend. controllers/goods/findByCategory",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -578,7 +557,6 @@ module.exports = {
 	getCSV:          ctrlWrapper(getCSV),
 	getXML:          ctrlWrapper(getXML),
 	getNews:         ctrlWrapper(getNews),
-	findByName:      ctrlWrapper(findByName),
 	findByBrandName: ctrlWrapper(findByBrandName),
 	findByCategory:  ctrlWrapper(findByCategory),
 };

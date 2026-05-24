@@ -39,7 +39,8 @@ const send = async (req, res) => {
 		res.status(200).json({success: true, fb_response: response.data});
 	} catch (err) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/conversion/send): ${err.message}\n\n`
+			"Backend. controllers/conversion/send",
+			`Error: ${err.message}`
 		);
 		res.status(500).json({error: "Failed to send conversion event", details: err.response?.data || err.message});
 	}

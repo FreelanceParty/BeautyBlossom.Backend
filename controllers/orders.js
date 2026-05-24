@@ -1,9 +1,5 @@
-// const wood = require("../WoodStorage/wood")
-
 const {ctrlWrapper} = require("../helpers");
-
 const sendTelegramMessage = require("../helpers/telegram");
-
 const ordersService = require("../services/orders/ordersService");
 
 const getAll = async (req, res) => {
@@ -22,7 +18,8 @@ const getAll = async (req, res) => {
 		res.json(items);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/orders/getAll): ${e.message}\n\n`
+			"Backend. controllers/orders/getAll",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -42,7 +39,8 @@ const add = async (req, res) => {
 		res.status(201).json(result);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/orders/add): ${e.message}\n\n`
+			"Backend. controllers/orders/add",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -69,7 +67,8 @@ const getAllbyUser = async (req, res) => {
 		res.json(items);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/orders/getAllbyUser): ${e.message}\n\n`
+			"Backend. controllers/orders/getAllbyUser",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -85,25 +84,14 @@ const getById = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/orders/getById): ${e.message}\n\n`
+				"Backend. controllers/orders/getById",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
 		throw e;
 	}
 }
-
-// const add = async (req, res) => {
-
-//     const { _id: owner } = req.user;
-// console.log("йобаний юзер", req.user);
-
-//     const result = await orders.create({ ...req.body, owner });
-//     //  const result = await Wood.create({...req.body});
-
-//     res.status(201).json(result);
-
-// }
 
 const updateById = async (req, res) => {
 	try {
@@ -113,30 +101,14 @@ const updateById = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/orders/updateById): ${e.message}\n\n`
+				"Backend. controllers/orders/updateById",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
 		throw e;
 	}
 }
-
-// const updateById = async (req, res) => {
-//   const { id } = req.params;
-//   const { amount } = req.body;
-
-//     const currentItem = await orders.findById(id);
-
-//     if (!currentItem) {
-//       throw HttpError(404, "Not found");
-//     }
-
-//     currentItem.amount += parseInt(amount);
-//     await currentItem.save();
-
-//     res.json(currentItem);
-
-// };
 
 const updateChecked = async (req, res) => {
 	try {
@@ -147,7 +119,8 @@ const updateChecked = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/orders/updateChecked): ${e.message}\n\n`
+				"Backend. controllers/orders/updateChecked",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
@@ -163,7 +136,10 @@ const updateStatus = async (req, res) => {
 		res.json(result);
 	} catch (e) {
 		if (e.status !== 404) {
-			await sendTelegramMessage(`❌ Помилка (Backend. controllers/orders/updateStatus): ${e.message}\n\n`);
+			await sendTelegramMessage(
+				"Backend. controllers/orders/updateStatus",
+				`Error: ${e.message}`
+			);
 		}
 		console.error(e);
 		throw e;
@@ -180,44 +156,14 @@ const deleteById = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/orders/deleteById): ${e.message}\n\n`
+				"Backend. controllers/orders/deleteById",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
 		throw e;
 	}
 }
-
-// const getAll = async (req, res) => {
-//     const result = await wood.getAll();
-//     res.json(result);
-// }
-
-// const add = async (req, res) => {
-//     const result = await wood.add(req.body);
-//     res.status(201).json(result);
-// }
-
-// const updateById = async (req, res) => {
-//     const { id } = req.params;
-//     const result = await wood.updateById(id, req.body);
-//     if (!result) {
-//         throw HttpError(404, "Not found");
-//     }
-//     res.json(result);
-// }
-
-// const deleteById = async (req, res) => {
-//     const { id } = req.params;
-//     const result = await wood.deleteById(id);
-//     if (!result) {
-//         throw HttpError(404, "Not found");
-//     }
-//     // res.status(204).send()
-//     res.json({
-//         message: "Delete success"
-//     })
-// }
 
 module.exports = {
 	getAllbyUser:  ctrlWrapper(getAllbyUser),

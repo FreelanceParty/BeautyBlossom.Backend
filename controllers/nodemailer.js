@@ -51,7 +51,8 @@ async function sendEmail(paths, req, res) {
 		return {message: "Email is sent, please check the inbox", success: true};
 	} catch (error) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/nodemailer/sendEmail): ${error.message}\n\n`
+			"Backend. controllers/nodemailer/sendEmail",
+			`Error: ${error.message}`
 		);
 		console.log("An error occurred:", error);
 		return {

@@ -16,7 +16,8 @@ const getAll = async (req, res) => {
 		res.json(result);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/feedback/getAll): ${e.message}\n\n`
+			"Backend. controllers/feedback/getAll",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -41,7 +42,8 @@ const add = async (req, res) => {
 		res.status(201).json(result);
 	} catch (e) {
 		await sendTelegramMessage(
-			`❌ Помилка (Backend. controllers/feedback/add): ${e.message}\n\n`
+			"Backend. controllers/feedback/add",
+			`Error: ${e.message}`
 		);
 		console.error(e);
 		throw e;
@@ -79,7 +81,8 @@ const deleteById = async (req, res) => {
 	} catch (e) {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
-				`❌ Помилка (Backend. controllers/feedback/deleteById): ${e.message}\n\n`
+				"Backend. controllers/feedback/deleteById",
+				`Error: ${e.message}`
 			);
 		}
 		console.error(e);
