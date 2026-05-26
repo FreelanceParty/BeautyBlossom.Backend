@@ -384,7 +384,7 @@ const getCSV = async (req, res) => {
 		// Додаємо властивість 'link', 'availability' та 'condition' до кожного товару
 		const updatedGoods = goods.map((item) => ({
 			...item.toObject(), // Перетворюємо товар на звичайний об'єкт
-			link:         `https://beautyblossom.com.ua/product/${item.id}`, // Використовуємо 'id'
+			link:         `https://www.beautyblossom.com.ua/product/${item.id}`, // Використовуємо 'id'
 			id:           item._id,
 			title:        item.name,
 			availability: item.amount > 0 ? "in stock" : "out of stock",
@@ -445,7 +445,7 @@ const getXML = async (req, res) => {
 				"g:id":           item._id ? String(item._id) : "N/A",
 				"g:title":        item.name || "No title",
 				"g:description":  item.description || "No description available",
-				"g:link":         `https://beautyblossom.com.ua/product/${item.id}`,
+				"g:link":         `https://www.beautyblossom.com.ua/product/${item.id}`,
 				"g:image_link":   item.images || "",
 				"g:condition":    "new",
 				"g:availability": item.amount > 0 ? "in stock" : "out of stock",
@@ -472,7 +472,7 @@ const getXML = async (req, res) => {
 				$:       {"xmlns:g": "http://base.google.com/ns/1.0", version: "2.0"},
 				channel: {
 					title:       "Beauty Blossom - Online Store",
-					link:        "https://beautyblossom.com.ua",
+					link:        "https://www.beautyblossom.com.ua",
 					description: "Google Shopping XML Feed",
 					item:        updatedGoods,
 				},

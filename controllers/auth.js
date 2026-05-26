@@ -83,7 +83,7 @@ const register = async (req, res) => {
 				const html = wrapWithBrandedLayout({
 					title: "Вітаємо у Beauty Blossom",
 					contentHtml,
-					cta:   {url: "https://beautyblossom.com.ua/", label: "Перейти на сайт"},
+					cta:   {url: "https://www.beautyblossom.com.ua/", label: "Перейти на сайт"},
 				});
 				let attachments;
 				try {
@@ -453,7 +453,7 @@ const restorePassword = async (req, res) => {
 					const html = wrapWithBrandedLayout({
 						title: "Відновлення пароля",
 						contentHtml,
-						cta:   {url: "https://beautyblossom.com.ua/", label: "Перейти на сайт"},
+						cta:   {url: "https://www.beautyblossom.com.ua/", label: "Перейти на сайт"},
 					});
 					let attachments;
 					try {

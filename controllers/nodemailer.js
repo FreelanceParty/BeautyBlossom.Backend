@@ -27,7 +27,7 @@ async function sendEmail(paths, req, res) {
 		const html = wrapWithBrandedLayout({
 			title: title || "Повідомлення",
 			contentHtml,
-			cta:   {url: "https://beautyblossom.com.ua/", label: "Перейти на сайт"},
+			cta:   {url: "https://www.beautyblossom.com.ua/", label: "Перейти на сайт"},
 		});
 
 		let attachments;

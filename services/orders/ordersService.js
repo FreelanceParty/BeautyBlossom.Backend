@@ -117,7 +117,7 @@ const sendOrderCreatedEmails = async (order) => {
 		title:    "Нове замовлення",
 		subtitle: `№ ${order.orderNumber || order._id}`,
 		contentHtml,
-		cta:      {url: "https://beautyblossom.com.ua/", label: "Перейти на сайт"},
+		cta:      {url: "https://www.beautyblossom.com.ua/", label: "Перейти на сайт"},
 	});
 
 	let attachments;
