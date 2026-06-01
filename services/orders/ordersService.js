@@ -165,9 +165,8 @@ const sendOrderCreatedEmails = async (order) => {
 		);
 	}
 
-	const testEmail = String(process.env.TEST_EMAIL || "").trim().toLowerCase();
 	const customerEmail = String(order.email || "").trim().toLowerCase();
-	if (customerEmail && testEmail && customerEmail === testEmail) {
+	if (customerEmail) {
 		const customerSubject = `Ваше замовлення №${order.orderNumber || order._id} прийнято`;
 		const customerText =
 			      `Дякуємо за замовлення у Beauty Blossom!\n` +
