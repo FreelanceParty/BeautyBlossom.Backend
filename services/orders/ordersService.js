@@ -176,11 +176,27 @@ const sendOrderCreatedEmails = async (order) => {
 			      `Сума: ${order.amount}\n\n` +
 			      `Товари:\n${itemsText}`;
 
-		const customerContentHtml = `
-			<div style="font-size:14px;line-height:20px;color:#111827;">
-				Дякуємо за ваше замовлення!
+		const topHtml = `
+			<div style="background:#ffffff;border:1px solid #eef2f7;border-radius:14px;padding:14px 14px;">
+				<div style="font-size:14px;line-height:20px;color:#111827;">
+					Дякуємо за замовлення! Ваше замовлення прийняли в роботу. Будь ласка, очікуйте на зв'язок з менеджером в Viber або Telegram.
+					<br/><br/>
+					У випадку додаткових питань , напишіть нашим менеджерам :
+					<br/><br/>
+					Viber ⬇️
+					<br/>
+					<a href="tel:+380633376709" style="color:#111827;text-decoration:none;font-weight:600;">+380633376709</a>
+					<br/><br/>
+					Telegram⬇️
+					<br/>
+					<a href="tel:+380500529100" style="color:#111827;text-decoration:none;font-weight:600;">+380500529100</a>
+					<br/><br/>
+					З повагою, команда BEAUTY BLOSSOM.
+				</div>
 			</div>
-			<div style="height:12px;line-height:12px;">&nbsp;</div>
+		`;
+
+		const customerContentHtml = `
 			<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
 				<tr>
 					<td style="padding:10px 12px;background:#fff7fb;border:1px solid #f3d7ea;border-radius:12px;">
@@ -225,6 +241,7 @@ const sendOrderCreatedEmails = async (order) => {
 		const customerHtml = wrapWithBrandedLayout({
 			title:       "Замовлення прийнято",
 			subtitle:    `№ ${order.orderNumber || order._id}`,
+			topHtml,
 			contentHtml: customerContentHtml,
 			cta:         {url: "https://www.beautyblossom.com.ua/", label: "Перейти на сайт"},
 		});

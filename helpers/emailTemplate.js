@@ -12,6 +12,7 @@ const escapeHtml = (v) => String(v ?? "").replace(/[&<>\"']/g, (ch) => {
 const wrapWithBrandedLayout = ({
 	title,
 	subtitle,
+	topHtml,
 	contentHtml,
 	cta,
 	footerText,
@@ -19,6 +20,15 @@ const wrapWithBrandedLayout = ({
 	const safeTitle = escapeHtml(title);
 	const safeSubtitle = subtitle ? escapeHtml(subtitle) : "";
 	const footer = escapeHtml(footerText || "Beauty Blossom • Відправлено з сайту");
+	const topBlockHtml = topHtml
+		? `
+		<tr>
+			<td style="padding:0 18px 12px 18px;font-family:Arial,sans-serif;">
+				${topHtml}
+			</td>
+		</tr>
+		`
+		: "";
 	const ctaHtml = cta?.url && cta?.label
 		? `
 		<div style="height:18px;line-height:18px;">&nbsp;</div>
@@ -34,6 +44,7 @@ const wrapWithBrandedLayout = ({
 		<tr>
 			<td align="center">
 				<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px;">
+					${topBlockHtml}
 					<tr>
 						<td style="padding:14px 18px;text-align:center;">
 							<img src="cid:bb-logo" alt="Beauty Blossom" width="160" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;" />
