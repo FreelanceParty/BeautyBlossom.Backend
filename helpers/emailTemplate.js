@@ -44,12 +44,12 @@ const wrapWithBrandedLayout = ({
 		<tr>
 			<td align="center">
 				<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px;">
-					${topBlockHtml}
 					<tr>
 						<td style="padding:14px 18px;text-align:center;">
 							<img src="cid:bb-logo" alt="Beauty Blossom" width="160" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;" />
 						</td>
 					</tr>
+					${topBlockHtml}
 					<tr>
 						<td style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #f0e6ef;">
 							<div style="padding:22px 22px 10px 22px;font-family:Arial,sans-serif;">
