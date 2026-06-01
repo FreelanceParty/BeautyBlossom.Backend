@@ -38,11 +38,15 @@ const send = async (req, res) => {
 		const response = await axios.post(url, payload);
 		res.status(200).json({success: true, fb_response: response.data});
 	} catch (err) {
+		const metaStatus = err.response?.status;
+		const metaData = err.response?.data;
 		await sendTelegramMessage(
 			"Backend. controllers/conversion/send",
-			`Error: ${err.message}`
+			`Error: ${err.message}` +
+				(metaStatus ? `\nStatus: ${metaStatus}` : "") +
+				(metaData ? `\nResponse: ${JSON.stringify(metaData)}` : "")
 		);
-		res.status(500).json({error: "Failed to send conversion event", details: err.response?.data || err.message});
+		res.status(500).json({error: "Failed to send conversion event", details: metaData || err.message});
 	}
 };
 
