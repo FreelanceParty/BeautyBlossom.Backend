@@ -23,8 +23,12 @@ const wrapWithBrandedLayout = ({
 	const topBlockHtml = topHtml
 		? `
 		<tr>
-			<td style="padding:0 18px 12px 18px;font-family:Arial,sans-serif;">
-				${topHtml}
+			<td style="padding:0 18px 12px 18px;">
+				<div style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #f0e6ef;font-family:Arial,sans-serif;">
+					<div style="padding:22px 22px 18px 22px;">
+						${topHtml}
+					</div>
+				</div>
 			</td>
 		</tr>
 		`

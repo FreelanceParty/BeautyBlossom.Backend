@@ -177,22 +177,20 @@ const sendOrderCreatedEmails = async (order) => {
 			      `Товари:\n${itemsText}`;
 
 		const topHtml = `
-			<div style="background:#ffffff;border:1px solid #eef2f7;border-radius:14px;padding:14px 14px;">
-				<div style="font-size:14px;line-height:20px;color:#111827;">
-					Дякуємо за замовлення! Ваше замовлення прийняли в роботу. Будь ласка, очікуйте на зв'язок з менеджером в Viber або Telegram.
-					<br/><br/>
-					У випадку додаткових питань , напишіть нашим менеджерам :
-					<br/><br/>
-					Viber ⬇️
-					<br/>
-					<a href="tel:+380633376709" style="color:#111827;text-decoration:none;font-weight:600;">+380633376709</a>
-					<br/><br/>
-					Telegram⬇️
-					<br/>
-					<a href="tel:+380500529100" style="color:#111827;text-decoration:none;font-weight:600;">+380500529100</a>
-					<br/><br/>
-					З повагою, команда BEAUTY BLOSSOM.
-				</div>
+			<div style="font-size:14px;line-height:20px;color:#111827;">
+				Дякуємо за замовлення! Ваше замовлення прийняли в роботу. Будь ласка, очікуйте на зв'язок з менеджером в Viber або Telegram.
+				<br/><br/>
+				У випадку додаткових питань , напишіть нашим менеджерам :
+				<br/><br/>
+				Viber ⬇️
+				<br/>
+				<a href="tel:+380633376709" style="color:#111827;text-decoration:none;font-weight:600;">+380633376709</a>
+				<br/><br/>
+				Telegram⬇️
+				<br/>
+				<a href="tel:+380500529100" style="color:#111827;text-decoration:none;font-weight:600;">+380500529100</a>
+				<br/><br/>
+				З повагою, команда BEAUTY BLOSSOM.
 			</div>
 		`;
 
