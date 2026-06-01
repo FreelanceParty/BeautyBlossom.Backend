@@ -11,8 +11,9 @@ const {escapeHtml, wrapWithBrandedLayout, getBrandedLogoAttachment} = require(".
 
 const sendOrderCreatedEmails = async (order) => {
 	const workerEmails = await workerEmailsRepository.findActiveByEvent("order_created");
-	const recipients = new Set(
-		[order.email, ...workerEmails.map(({email}) => email)]
+	const workerRecipients = new Set(
+		workerEmails
+			.map(({email}) => email)
 			.filter(Boolean)
 			.map((e) => String(e).trim().toLowerCase())
 	);
@@ -127,17 +128,87 @@ const sendOrderCreatedEmails = async (order) => {
 		attachments = undefined;
 	}
 
-	await Promise.allSettled(
-		Array.from(recipients).map((to) =>
+	const tasks = [];
+	if (workerRecipients.size > 0) {
+		tasks.push(
+			Promise.allSettled(
+				Array.from(workerRecipients).map((to) =>
+					mailer({
+						to,
+						subject,
+						text,
+						html,
+						attachments,
+					})
+				)
+			)
+		);
+	}
+
+	const testEmail = String(process.env.TEST_EMAIL || "").trim().toLowerCase();
+	const customerEmail = String(order.email || "").trim().toLowerCase();
+	if (customerEmail && testEmail && customerEmail === testEmail) {
+		const customerSubject = `Ваше замовлення №${order.orderNumber || order._id} прийнято`;
+		const customerText =
+			      `Дякуємо за замовлення у Beauty Blossom!\n` +
+			      `Номер: ${order.orderNumber || order._id}\n` +
+			      `Статус: ${order.status}\n` +
+			      `Сума: ${order.amount}\n\n` +
+			      `Товари:\n${itemsText}`;
+
+		const customerContentHtml = `
+			<div style="font-size:14px;line-height:20px;color:#111827;">
+				Дякуємо за ваше замовлення!
+			</div>
+			<div style="height:12px;line-height:12px;">&nbsp;</div>
+			<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+				<tr>
+					<td style="padding:10px 12px;background:#f8fafc;border:1px solid #eef2f7;border-radius:12px;">
+						<div style="font-size:12px;color:#6b7280;">Доставка</div>
+						<div style="font-size:13px;color:#111827;margin-top:4px;">Спосіб: <span style="font-weight:600;">${safe(order.deliveryMethod)}</span></div>
+						<div style="font-size:13px;color:#111827;margin-top:2px;">Місто: <span style="font-weight:600;">${safe(order.city)}</span></div>
+						${order.warehouse ? `<div style="font-size:13px;color:#111827;margin-top:2px;">Відділення: <span style="font-weight:600;">${safe(order.warehouse)}</span></div>` : ""}
+						${order.address ? `<div style="font-size:13px;color:#111827;margin-top:2px;">Адреса: <span style="font-weight:600;">${safe(order.address)}</span></div>` : ""}
+						${order.building ? `<div style=\"font-size:13px;color:#111827;margin-top:2px;\">Будинок: <span style=\"font-weight:600;\">${safe(order.building)}</span></div>` : ""}
+						${order.apartment ? `<div style=\"font-size:13px;color:#111827;margin-top:2px;\">Квартира: <span style=\"font-weight:600;\">${safe(order.apartment)}</span></div>` : ""}
+					</td>
+				</tr>
+			</table>
+			<div style="height:14px;line-height:14px;">&nbsp;</div>
+			<div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:8px;">Товари</div>
+			<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;background:#ffffff;border:1px solid #eef2f7;border-radius:12px;overflow:hidden;font-family:Arial,sans-serif;">
+				<tr>
+					<th align="left" style="padding:12px 10px;background:#f9fafb;color:#6b7280;font-size:12px;font-weight:700;">Товар</th>
+					<th align="center" style="padding:12px 10px;background:#f9fafb;color:#6b7280;font-size:12px;font-weight:700;">К-сть</th>
+					<th align="right" style="padding:12px 10px;background:#f9fafb;color:#6b7280;font-size:12px;font-weight:700;">Сума</th>
+				</tr>
+				${itemsRowsHtml || `<tr><td colspan="3" style="padding:12px 10px;border-top:1px solid #f0f0f0;color:#6b7280;">Немає товарів</td></tr>`}
+				<tr>
+					<td colspan="2" style="padding:14px 10px;border-top:1px solid #f0f0f0;text-align:right;color:#111827;font-weight:700;">Разом:</td>
+					<td style="padding:14px 10px;border-top:1px solid #f0f0f0;text-align:right;color:#111827;font-weight:800;white-space:nowrap;">${safe(order.amount)}</td>
+				</tr>
+			</table>
+		`;
+
+		const customerHtml = wrapWithBrandedLayout({
+			title:       "Замовлення прийнято",
+			subtitle:    `№ ${order.orderNumber || order._id}`,
+			contentHtml: customerContentHtml,
+			cta:         {url: "https://www.beautyblossom.com.ua/", label: "Перейти на сайт"},
+		});
+
+		tasks.push(
 			mailer({
-				to,
-				subject,
-				text,
-				html,
+				to:      customerEmail,
+				subject: customerSubject,
+				text:    customerText,
+				html:    customerHtml,
 				attachments,
 			})
-		)
-	);
+		);
+	}
+
+	await Promise.allSettled(tasks);
 };
 
 const listOrders = async ({query, baseFilter = {}}) => {
