@@ -57,6 +57,26 @@ const sendOrderCreatedEmails = async (order) => {
 		})
 		.join("");
 
+	const customerItemsRowsHtml = items
+		.map((i) => {
+			const imageUrl = String(i.images || "").trim();
+			const imageCell = imageUrl
+				? `<img src="${safe(imageUrl)}" alt="${safe(i.name)}" width="56" height="56" style="display:block;width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid #f3d7ea;background:#ffffff;" />`
+				: "";
+			return (
+				"<tr>" +
+				`<td style=\"padding:12px 10px;border-top:1px solid #f0f0f0;width:72px;vertical-align:top;\">${imageCell}</td>` +
+				`<td style=\"padding:12px 10px;border-top:1px solid #f0f0f0;vertical-align:top;\">` +
+				`<div style=\"font-weight:600;color:#111827;\">${safe(i.name)}</div>` +
+				`<div style=\"font-size:12px;color:#6b7280;margin-top:2px;\">Артикул: ${safe(i.code)}</div>` +
+				"</td>" +
+				`<td style=\"padding:12px 10px;border-top:1px solid #f0f0f0;text-align:center;white-space:nowrap;\">${safe(i.quantity)}</td>` +
+				`<td style=\"padding:12px 10px;border-top:1px solid #f0f0f0;text-align:right;white-space:nowrap;font-weight:600;\">${safe(i.amount)}</td>` +
+				"</tr>"
+			);
+		})
+		.join("");
+
 	const contentHtml = `
 		<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
 			<tr>
@@ -163,6 +183,17 @@ const sendOrderCreatedEmails = async (order) => {
 			<div style="height:12px;line-height:12px;">&nbsp;</div>
 			<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
 				<tr>
+					<td style="padding:10px 12px;background:#fff7fb;border:1px solid #f3d7ea;border-radius:12px;">
+						<div style="font-size:12px;color:#6b7280;">Покупець</div>
+						<div style="font-size:14px;font-weight:600;color:#111827;margin-top:2px;">${safe(order.firstName)} ${safe(order.lastName)}</div>
+						<div style="font-size:13px;color:#374151;margin-top:6px;">Телефон: <span style="font-weight:600;">${safe(order.number)}</span></div>
+						<div style="font-size:13px;color:#374151;margin-top:2px;">Email: <span style="font-weight:600;">${safe(order.email)}</span></div>
+					</td>
+				</tr>
+			</table>
+			<div style="height:12px;line-height:12px;">&nbsp;</div>
+			<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+				<tr>
 					<td style="padding:10px 12px;background:#f8fafc;border:1px solid #eef2f7;border-radius:12px;">
 						<div style="font-size:12px;color:#6b7280;">Доставка</div>
 						<div style="font-size:13px;color:#111827;margin-top:4px;">Спосіб: <span style="font-weight:600;">${safe(order.deliveryMethod)}</span></div>
@@ -178,13 +209,14 @@ const sendOrderCreatedEmails = async (order) => {
 			<div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:8px;">Товари</div>
 			<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;background:#ffffff;border:1px solid #eef2f7;border-radius:12px;overflow:hidden;font-family:Arial,sans-serif;">
 				<tr>
+					<th align="left" style="padding:12px 10px;background:#f9fafb;color:#6b7280;font-size:12px;font-weight:700;width:72px;">Фото</th>
 					<th align="left" style="padding:12px 10px;background:#f9fafb;color:#6b7280;font-size:12px;font-weight:700;">Товар</th>
 					<th align="center" style="padding:12px 10px;background:#f9fafb;color:#6b7280;font-size:12px;font-weight:700;">К-сть</th>
 					<th align="right" style="padding:12px 10px;background:#f9fafb;color:#6b7280;font-size:12px;font-weight:700;">Сума</th>
 				</tr>
-				${itemsRowsHtml || `<tr><td colspan="3" style="padding:12px 10px;border-top:1px solid #f0f0f0;color:#6b7280;">Немає товарів</td></tr>`}
+				${customerItemsRowsHtml || `<tr><td colspan="4" style="padding:12px 10px;border-top:1px solid #f0f0f0;color:#6b7280;">Немає товарів</td></tr>`}
 				<tr>
-					<td colspan="2" style="padding:14px 10px;border-top:1px solid #f0f0f0;text-align:right;color:#111827;font-weight:700;">Разом:</td>
+					<td colspan="3" style="padding:14px 10px;border-top:1px solid #f0f0f0;text-align:right;color:#111827;font-weight:700;">Разом:</td>
 					<td style="padding:14px 10px;border-top:1px solid #f0f0f0;text-align:right;color:#111827;font-weight:800;white-space:nowrap;">${safe(order.amount)}</td>
 				</tr>
 			</table>
