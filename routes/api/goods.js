@@ -15,6 +15,9 @@ router.get("/search", ctrl.search);
 router.get("/findByBrandName/:brandName", ctrl.findByBrandName);
 router.get("/findByCategory/:category", ctrl.findByCategory);
 
+router.get("/fetchPage", ctrl.fetchPage);
+router.get("/recommended", ctrl.getRecommended);
+
 router.get("/", ctrl.getAll);
 router.get("/:id", ctrl.getById);
 

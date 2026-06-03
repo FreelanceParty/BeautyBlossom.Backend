@@ -8,6 +8,31 @@ const {transliterate} = require("../utils/transliterate");
 const sendTelegramMessage = require("../helpers/telegram");
 const {getGoodsIndex, toMeiliGoodsDoc} = require("../helpers/meili");
 
+const parseBool = (value) => {
+	if (value === undefined) {
+		return undefined;
+	}
+	if (typeof value === "boolean") {
+		return value;
+	}
+	const v = String(value).trim().toLowerCase();
+	if (["1", "true", "yes", "y"].includes(v)) {
+		return true;
+	}
+	if (["0", "false", "no", "n"].includes(v)) {
+		return false;
+	}
+	return undefined;
+};
+
+const parsePositiveInt = (value, fallback) => {
+	const n = parseInt(value, 10);
+	if (Number.isFinite(n) && n > 0) {
+		return n;
+	}
+	return fallback;
+};
+
 const getAll = async (req, res) => {
 	try {
 		const {
@@ -150,6 +175,128 @@ const getAll = async (req, res) => {
 				`Error: ${e.message}`
 			);
 		}
+		console.error(e);
+		throw e;
+	}
+};
+
+const fetchPage = async (req, res) => {
+	try {
+		const {
+			      page,
+			      perPage,
+			      limit,
+			      sale,
+			      new: isNew,
+			      inStock,
+			      onlyAvailable,
+			      sort = "default",
+		      } = req.query;
+
+		const pageNumber = parsePositiveInt(page, 1);
+		const perPageNumber = Math.min(
+			parsePositiveInt(perPage ?? limit, 24),
+			200
+		);
+		const skip = (pageNumber - 1) * perPageNumber;
+
+		const query = {};
+
+		const saleBool = parseBool(sale);
+		if (saleBool !== undefined) {
+			query.sale = saleBool;
+		}
+
+		const newBool = parseBool(isNew);
+		if (newBool !== undefined) {
+			query.new = newBool;
+		}
+
+		const onlyAvailableBool = parseBool(onlyAvailable);
+		if (onlyAvailableBool === true) {
+			query.amount = {$gte: 1};
+		} else {
+			const inStockBool = parseBool(inStock);
+			if (inStockBool === true) {
+				query.amount = {$gte: 1};
+			}
+			if (inStockBool === false) {
+				query.amount = {$lte: 0};
+			}
+		}
+
+		let sortOptions = {};
+		switch (sort) {
+			case "nameABC":
+				sortOptions = {name: 1};
+				break;
+			case "nameCBA":
+				sortOptions = {name: -1};
+				break;
+			case "priceMin":
+				sortOptions = {price: 1};
+				break;
+			case "priceMax":
+				sortOptions = {price: -1};
+				break;
+			case "newest":
+				sortOptions = {createdAt: -1};
+				break;
+			default:
+				sortOptions = {};
+		}
+
+		const goods = await Goods.find(query)
+			.sort(sortOptions)
+			.skip(skip)
+			.limit(perPageNumber);
+
+		const total = await Goods.countDocuments(query);
+
+		return res.json({
+			page:       pageNumber,
+			per_page:   perPageNumber,
+			total,
+			totalPages: Math.ceil(total / perPageNumber),
+			goods,
+		});
+	} catch (e) {
+		await sendTelegramMessage(
+			"Backend. controllers/goods/fetchPage",
+			`Error: ${e.message}`
+		);
+		console.error(e);
+		throw e;
+	}
+};
+
+const getRecommended = async (req, res) => {
+	try {
+		const {excludeId, productId, limit, onlyAvailable} = req.query;
+		const limitNumber = Math.min(parsePositiveInt(limit, 12), 60);
+		const rawExclude = excludeId ?? productId;
+		const exclude = rawExclude !== undefined ? Number(rawExclude) : undefined;
+		const onlyAvailableBool = parseBool(onlyAvailable);
+
+		const match = {
+			...(onlyAvailableBool === false ? {} : {amount: {$gte: 1}}),
+			$or:    [{new: true}, {sale: true}],
+		};
+		if (exclude !== undefined && !Number.isNaN(exclude)) {
+			match.id = {$ne: exclude};
+		}
+
+		const goods = await Goods.aggregate([
+			{$match: match},
+			{$sample: {size: limitNumber}},
+		]);
+
+		return res.json({goods});
+	} catch (e) {
+		await sendTelegramMessage(
+			"Backend. controllers/goods/getRecommended",
+			`Error: ${e.message}`
+		);
 		console.error(e);
 		throw e;
 	}
@@ -547,6 +694,8 @@ const findByCategory = async (req, res) => {
 
 module.exports = {
 	getAll:          ctrlWrapper(getAll),
+	fetchPage:       ctrlWrapper(fetchPage),
+	getRecommended:  ctrlWrapper(getRecommended),
 	getById:         ctrlWrapper(getById),
 	search:          ctrlWrapper(search),
 	add:             ctrlWrapper(add),
