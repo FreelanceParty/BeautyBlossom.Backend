@@ -1,6 +1,7 @@
 const {Schema, model} = require('mongoose');
 const Joi = require("joi");
 const {handleMongooseError} = require('../helpers')
+const normalizePhone = require("../helpers/normalizePhone");
 
 const statusList = ['Новий', 'Прийняте в роботу', 'Збирається', 'Зібрано', 'Відправлено', 'Відміна']
 
@@ -27,7 +28,8 @@ const ordersSchema = new Schema({
 		required: true
 	},
 	number:         {
-		type:     Number,
+		type:     String,
+		set: (value) => normalizePhone(value),
 		required: true
 	},
 	city:           {
@@ -118,11 +120,21 @@ const ordersSchema = new Schema({
 ordersSchema.post('save', handleMongooseError)
 // якщо при спробы сейв сталась помилка виконай цю мідлвар
 
+const phoneJoi = Joi.string()
+	.required()
+	.custom((value, helpers) => {
+		try {
+			return normalizePhone(value);
+		} catch (e) {
+			return helpers.error("any.invalid");
+		}
+	}, "phone normalization");
+
 const addSchema = Joi.object({
 	email:          Joi.string().required(),
 	firstName:      Joi.string().required(),
 	lastName:       Joi.string().required(),
-	number:         Joi.number().required(),
+	number:         phoneJoi,
 	city:           Joi.string().required(),
 	warehouse:      Joi.string(),
 	paymentMethod:  Joi.string().required(),

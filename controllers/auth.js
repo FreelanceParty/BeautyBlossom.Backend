@@ -24,6 +24,8 @@ const avatarsDir = path.join(__dirname, "../", "public", "avatars");
 
 const sendTelegramMessage = require("../helpers/telegram");
 
+const normalizePhone = require("../helpers/normalizePhone");
+
 const register = async (req, res) => {
 	try {
 		const {email, password, number} = req.body;
@@ -280,6 +282,7 @@ const updateUserData = async (req, res) => {
 	try {
 		const {_id} = req.user;
 		const {email, firstName, lastName, number} = req.body;
+		const normalizedNumber = number !== undefined ? normalizePhone(number) : undefined;
 
 		// Перевірка, чи користувач існує
 		const user = await User.findById(_id);
@@ -300,9 +303,9 @@ const updateUserData = async (req, res) => {
 			}
 		}
 
-		if (number && number !== user.number) {
+		if (normalizedNumber && normalizedNumber !== user.number) {
 			const existingNumberUser = await User.findOne({
-				number,
+				number: normalizedNumber,
 				_id: {$ne: _id},
 			});
 			if (existingNumberUser) {
@@ -320,8 +323,8 @@ const updateUserData = async (req, res) => {
 		if (lastName) {
 			user.lastName = lastName;
 		}
-		if (number) {
-			user.number = number;
+		if (normalizedNumber) {
+			user.number = normalizedNumber;
 		}
 		if (email) {
 			user.email = email;

@@ -26,6 +26,7 @@
     "joi": "^17.7.1",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.0",
+    "libphonenumber-js": "^1.11.7",
     "meilisearch": "^0.44.0",
     "moment": "^2.29.4",
     "mongoose": "^7.4.2",

@@ -2,6 +2,7 @@ const { Schema, model } = require("mongoose");
 const Joi = require("joi");
 
 const { handleMongooseError } = require("../helpers");
+const normalizePhone = require("../helpers/normalizePhone");
 
 const emailRegexp = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 
@@ -31,7 +32,8 @@ const userSchema = new Schema(
       required: true,
     },
     number: {
-      type: Number,
+      type: String,
+      set: (value) => normalizePhone(value),
       unique: false,
       required: true,
     },
@@ -82,11 +84,21 @@ const userSchema = new Schema(
 
 userSchema.post("save", handleMongooseError);
 
+const phoneJoi = Joi.string()
+  .required()
+  .custom((value, helpers) => {
+    try {
+      return normalizePhone(value);
+    } catch (e) {
+      return helpers.error("any.invalid");
+    }
+  }, "phone normalization");
+
 const registerSchema = Joi.object({
   firstName: Joi.string().required(),
   lastName: Joi.string().required(),
   city: Joi.string(),
-  number: Joi.number(),
+  number: phoneJoi,
   link: Joi.string().allow(''),
   socialMedia: Joi.boolean(),
   onlineShop: Joi.boolean(),
