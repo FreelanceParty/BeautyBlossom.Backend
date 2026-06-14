@@ -15,7 +15,12 @@ const goodsSchema = new Schema({
 	images:       String,
 	country:      String,
 	availability: String,
-	id:           Number,
+	id:           {
+		type:   Number,
+		unique: true,
+		sparse: true,
+		index:  true,
+	},
 	reviewsCount: {
 		type:    Number,
 		default: 0,
@@ -75,7 +80,7 @@ const addSchema = Joi.object({
 	category:       Joi.string().required(),
 	subCategory:    Joi.string().allow('').optional(),
 	subSubCategory: Joi.string().allow('').optional(),
-	filterTagIds: Joi.string().allow('').optional(),
+	filterTagIds:   Joi.string().allow('').optional(),
 });
 
 const updateChekedSchema = Joi.object({

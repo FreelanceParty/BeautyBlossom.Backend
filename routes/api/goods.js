@@ -2,7 +2,7 @@ const express = require("express");
 
 const ctrl = require("../../controllers/goods");
 
-const {validateBody, isValidId, authenticate, requireAdmin} = require("../../middlewares");
+const {validateBody, authenticate, requireAdmin} = require("../../middlewares");
 
 const {schemas} = require("../../models/goods");
 
@@ -23,12 +23,12 @@ router.get("/:id", ctrl.getById);
 
 router.post("/", authenticate, requireAdmin, validateBody(schemas.addSchema), ctrl.add);
 
-router.put("/:id", authenticate, requireAdmin, isValidId, validateBody(schemas.addSchema), ctrl.updateById);
+router.put("/:id", authenticate, requireAdmin, validateBody(schemas.addSchema), ctrl.updateById);
 
-router.patch("/:id/checked", authenticate, requireAdmin, isValidId, validateBody(schemas.updateChekedSchema), ctrl.updateCheked);
-router.patch("/:id/amount", authenticate, requireAdmin, isValidId, validateBody(schemas.updateAmountSchema), ctrl.updateAmount);
+router.patch("/:id/checked", authenticate, requireAdmin, validateBody(schemas.updateChekedSchema), ctrl.updateCheked);
+router.patch("/:id/amount", authenticate, requireAdmin, validateBody(schemas.updateAmountSchema), ctrl.updateAmount);
 
-router.delete("/:id", authenticate, requireAdmin, isValidId, ctrl.deleteById);
+router.delete("/:id", authenticate, requireAdmin, ctrl.deleteById);
 
 module.exports = router;
 

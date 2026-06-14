@@ -18,7 +18,7 @@ router.put("/:id", authenticate, isValidId, ctrl.updateById);
 
 router.patch("/:id/checked", authenticate, isValidId, validateBody(schemas.updateChekedSchema), ctrl.updateCheked);
 
-router.delete("/:id", authenticate, isValidId, ctrl.deleteById);
+router.delete("/:id", authenticate, ctrl.deleteById);
 
 router.delete("/", authenticate, ctrl.deleteAllByOwner);
 

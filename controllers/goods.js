@@ -280,7 +280,7 @@ const getRecommended = async (req, res) => {
 
 		const match = {
 			...(onlyAvailableBool === false ? {} : {amount: {$gte: 1}}),
-			$or:    [{new: true}, {sale: true}],
+			$or: [{new: true}, {sale: true}],
 		};
 		if (exclude !== undefined && !Number.isNaN(exclude)) {
 			match.id = {$ne: exclude};
@@ -386,7 +386,7 @@ const add = async (req, res) => {
 const updateById = async (req, res) => {
 	try {
 		const {id} = req.params;
-		const result = await Goods.findByIdAndUpdate(id, req.body, {new: true});
+		const result = await Goods.findOneAndUpdate({id: Number(id)}, req.body, {new: true});
 		if (!result) {
 			throw HttpError(404, "Not found");
 		}
@@ -413,7 +413,7 @@ const updateById = async (req, res) => {
 const updateCheked = async (req, res) => {
 	try {
 		const {id} = req.params;
-		const result = await Goods.findByIdAndUpdate(id, req.body, {new: true});
+		const result = await Goods.findOneAndUpdate({id: Number(id)}, req.body, {new: true});
 		if (!result) {
 			throw HttpError(404, "Not found");
 		}
@@ -439,8 +439,8 @@ const updateAmount = async (req, res) => {
 			throw HttpError(400, "Missing required field: amount");
 		}
 
-		const result = await Goods.findByIdAndUpdate(
-			id,
+		const result = await Goods.findOneAndUpdate(
+			{id: Number(id)},
 			{amount},
 			{new: true, runValidators: true}
 		);
@@ -464,7 +464,7 @@ const updateAmount = async (req, res) => {
 const deleteById = async (req, res) => {
 	try {
 		const {id} = req.params;
-		const result = await Goods.findByIdAndRemove(id);
+		const result = await Goods.findOneAndDelete({id: Number(id)});
 		if (!result) {
 			throw HttpError(404, "Not found");
 		}
@@ -531,7 +531,8 @@ const getCSV = async (req, res) => {
 		// Додаємо властивість 'link', 'availability' та 'condition' до кожного товару
 		const updatedGoods = goods.map((item) => ({
 			...item.toObject(), // Перетворюємо товар на звичайний об'єкт
-			link:         `https://www.beautyblossom.com.ua/products/${item.id}`, // Використовуємо 'id'
+			link: `https://www.beautyblossom.com.ua/products/${item.id}`, // Використовуємо 'id'
+			// todo: use only id, not _id, so may be delete this?
 			id:           item._id,
 			title:        item.name,
 			availability: item.amount > 0 ? "in stock" : "out of stock",
@@ -589,6 +590,7 @@ const getXML = async (req, res) => {
 
 		const updatedGoods = goods.map((item) => {
 			const xmlItem = {
+				// todo: use only id, not _id, so may be change this?
 				"g:id":           item._id ? String(item._id) : "N/A",
 				"g:title":        item.name || "No title",
 				"g:description":  item.description || "No description available",

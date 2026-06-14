@@ -128,9 +128,15 @@ const updateCheked = async (req, res) => {
 
 const deleteById = async (req, res) => {
 	try {
+		const {_id: owner} = req.user;
 		const {id} = req.params;
-		const result = await basket.findByIdAndRemove(id);
-		if (!result) {
+		// Cart items are identified by the product integer id (productId), scoped to the owner.
+		const productId = Number(id);
+		if (!Number.isFinite(productId)) {
+			throw HttpError(400, "Invalid product id");
+		}
+		const result = await basket.deleteMany({owner, productId});
+		if (!result.deletedCount) {
 			throw HttpError(404, "Not found");
 		}
 		res.json({
