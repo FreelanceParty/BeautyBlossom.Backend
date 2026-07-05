@@ -32,10 +32,12 @@ const register = async (req, res) => {
 		const user = await User.findOne({email});
 		const numberUser = await User.findOne({number});
 		if (user) {
-			throw HttpError(409, "Email already in use");
+			const message = "Ця електронна пошта вже використовується";
+			throw HttpError(409, message, {isCustom: true, errors: {email: message}});
 		}
 		if (numberUser) {
-			throw HttpError(409, "The phone number is already in use");
+			const message = "Цей номер телефону вже використовується";
+			throw HttpError(409, message, {isCustom: true, errors: {number: message}});
 		}
 		const hashPassword = await bcrypt.hash(password, 10);
 		// для однакових строк хеш різний, (пароль, сіль)
@@ -166,7 +168,7 @@ const login = async (req, res) => {
 		const {email, password} = req.body;
 		const user = await User.findOne({email});
 		if (!user) {
-			throw HttpError(401, "Email or password invalid");
+			throw HttpError(401, "Логін або пароль вказано невірно", {isCustom: true});
 		}
 
 		// if(!user.verify) {
@@ -177,7 +179,7 @@ const login = async (req, res) => {
 		// в bcrypt є метод компеір передаємо ( не захешований пароль, захешований )
 		// якщо 2 арг є захешованою версією першого повертає тру
 		if (!passwordCompare) {
-			throw HttpError(401, "Email or password invalid");
+			throw HttpError(401, "Логін або пароль вказано невірно", {isCustom: true});
 		}
 		if (user.isAdmin) {
 			user.isAdmin = true;
@@ -306,7 +308,7 @@ const updateUserData = async (req, res) => {
 		if (normalizedNumber && normalizedNumber !== user.number) {
 			const existingNumberUser = await User.findOne({
 				number: normalizedNumber,
-				_id: {$ne: _id},
+				_id:    {$ne: _id},
 			});
 			if (existingNumberUser) {
 				throw HttpError(409, "The phone number is already in use", {

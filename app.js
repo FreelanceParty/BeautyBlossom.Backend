@@ -91,6 +91,9 @@ app.use((err, req, res, next) => {
 	const payload = {message};
 	if (err.code) payload.code = err.code;
 	if (err.meta) payload.meta = err.meta;
+	if (err.isValidation) payload.isValidation = true;
+	if (err.errors) payload.errors = err.errors;
+	if (err.isCustom) payload.isCustom = true;
 	res.status(status).json(payload);
 });
 

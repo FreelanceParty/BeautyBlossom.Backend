@@ -1,7 +1,7 @@
 const { Schema, model } = require("mongoose");
 const Joi = require("joi");
 
-const { handleMongooseError } = require("../helpers");
+const { handleMongooseError, joiMessagesUk } = require("../helpers");
 const normalizePhone = require("../helpers/normalizePhone");
 
 const emailRegexp = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -86,6 +86,7 @@ userSchema.post("save", handleMongooseError);
 
 const phoneJoi = Joi.string()
   .required()
+  .label("Номер телефону")
   .custom((value, helpers) => {
     try {
       return normalizePhone(value);
@@ -95,27 +96,27 @@ const phoneJoi = Joi.string()
   }, "phone normalization");
 
 const registerSchema = Joi.object({
-  firstName: Joi.string().required(),
-  lastName: Joi.string().required(),
-  city: Joi.string(),
+  firstName: Joi.string().required().label("Ім'я"),
+  lastName: Joi.string().required().label("Прізвище"),
+  city: Joi.string().label("Місто"),
   number: phoneJoi,
-  link: Joi.string().allow(''),
-  socialMedia: Joi.boolean(),
-  onlineShop: Joi.boolean(),
-  offlineShop: Joi.boolean(),
-  optUser: Joi.boolean().required(),
-  email: Joi.string().pattern(emailRegexp).required(),
-  password: Joi.string().min(6).required(),
-});
+  link: Joi.string().allow('').label("Посилання"),
+  socialMedia: Joi.boolean().label("Соціальні мережі"),
+  onlineShop: Joi.boolean().label("Онлайн-магазин"),
+  offlineShop: Joi.boolean().label("Офлайн-магазин"),
+  optUser: Joi.boolean().required().label("Оптовий покупець"),
+  email: Joi.string().pattern(emailRegexp).required().label("Електронна пошта"),
+  password: Joi.string().min(6).required().label("Пароль"),
+}).prefs({ messages: joiMessagesUk });
 
 const emailSchema = Joi.object({
-  email: Joi.string().pattern(emailRegexp).required(),
-});
+  email: Joi.string().pattern(emailRegexp).required().label("Електронна пошта"),
+}).prefs({ messages: joiMessagesUk });
 
 const loginSchema = Joi.object({
-  email: Joi.string().pattern(emailRegexp).required(),
-  password: Joi.string().min(6).required(),
-});
+  email: Joi.string().pattern(emailRegexp).required().label("Електронна пошта"),
+  password: Joi.string().min(6).required().label("Пароль"),
+}).prefs({ messages: joiMessagesUk });
 
 const schemas = {
   registerSchema,

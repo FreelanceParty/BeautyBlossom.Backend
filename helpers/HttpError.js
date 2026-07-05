@@ -11,9 +11,12 @@ const HttpError = (status, message = errorMessageList[status], options = {}) => 
     error.status = status;
 
     if (options && typeof options === "object") {
-        const { code, meta } = options;
+        const { code, meta, isValidation, errors, isCustom } = options;
         if (code) error.code = code;
         if (meta) error.meta = meta;
+        if (isValidation) error.isValidation = true;
+        if (errors) error.errors = errors;
+        if (isCustom) error.isCustom = true;
     }
 
     return error;
