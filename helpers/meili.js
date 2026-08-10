@@ -32,6 +32,7 @@ const toMeiliGoodsDoc = (doc) => {
 		code: obj.code,
 		price: obj.price,
 		priceOPT: obj.priceOPT,
+		priceDrop: obj.priceDrop,
 		amount: obj.amount,
 		images: obj.images,
 		country: obj.country,

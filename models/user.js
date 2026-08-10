@@ -56,6 +56,11 @@ const userSchema = new Schema(
       type: Boolean,
       required: true,
     },
+    dropUser: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
 
     isAdmin: {
       type: Boolean,
@@ -105,6 +110,7 @@ const registerSchema = Joi.object({
   onlineShop: Joi.boolean().label("Онлайн-магазин"),
   offlineShop: Joi.boolean().label("Офлайн-магазин"),
   optUser: Joi.boolean().required().label("Оптовий покупець"),
+  dropUser: Joi.boolean().label("Дроп покупець"),
   email: Joi.string().pattern(emailRegexp).required().label("Електронна пошта"),
   password: Joi.string().min(6).required().label("Пароль"),
 }).prefs({ messages: joiMessagesUk });

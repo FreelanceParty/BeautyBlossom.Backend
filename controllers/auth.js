@@ -58,6 +58,7 @@ const register = async (req, res) => {
 			onlineShop:  req.body.onlineShop,
 			socialMedia: req.body.socialMedia,
 			optUser:     req.body.optUser,
+			dropUser:    req.body.dropUser,
 			avatarURL,
 			verificationCode,
 			isAdmin:     false,
@@ -107,6 +108,7 @@ const register = async (req, res) => {
 			country:   newUser.country,
 			city:      newUser.city,
 			optUser:   newUser.optUser,
+			dropUser:  newUser.dropUser,
 			isAdmin:   newUser.isAdmin,
 		});
 
@@ -205,6 +207,7 @@ const login = async (req, res) => {
 			token:     token,
 			isAdmin:   user.isAdmin,
 			optUser:   user.optUser,
+			dropUser:  user.dropUser,
 		});
 	} catch (e) {
 		if (e.status !== 401) {
@@ -220,7 +223,7 @@ const login = async (req, res) => {
 
 const getCurrent = async (req, res) => {
 	try {
-		const {_id, email, firstName, lastName, number, isAdmin, optUser} =
+		const {_id, email, firstName, lastName, number, isAdmin, optUser, dropUser} =
 			      req.user;
 		res.json({
 			email,
@@ -229,6 +232,7 @@ const getCurrent = async (req, res) => {
 			number,
 			isAdmin,
 			optUser,
+			dropUser,
 			_id,
 		});
 	} catch (e) {
