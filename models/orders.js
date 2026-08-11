@@ -15,6 +15,10 @@ const ordersSchema = new Schema({
 		type:     Boolean,
 		required: false
 	},
+	isDropUser:     {
+		type:     Boolean,
+		required: false
+	},
 	email:          {
 		type:     String,
 		required: true
@@ -146,6 +150,7 @@ const addSchema = Joi.object({
 	building:       Joi.string(),
 	apartment:      Joi.string(),
 	isOptUser:      Joi.boolean(),
+	isDropUser:     Joi.boolean(),
 	orderNumber:    Joi.string(),
 	orderedItems:   Joi.array().items(Joi.object({
 		productId: Joi.number().required(),
