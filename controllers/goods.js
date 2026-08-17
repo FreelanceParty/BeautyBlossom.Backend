@@ -33,6 +33,8 @@ const parsePositiveInt = (value, fallback) => {
 	return fallback;
 };
 
+const escapeRegExp = (value) => String(value ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const getAll = async (req, res) => {
 	try {
 		const {
@@ -507,7 +509,7 @@ const search = async (req, res) => {
 		}
 
 		const words = query.split(/\s+/).filter(Boolean);
-		const and = words.map((w) => ({name: {$regex: w, $options: "i"}}));
+		const and = words.map((w) => ({name: {$regex: escapeRegExp(w), $options: "i"}}));
 		const goods = await Goods.find({$and: and}).limit(
 			Math.min(parseInt(limit) || 40, 200)
 		);
@@ -659,7 +661,7 @@ const findByBrandName = async (req, res) => {
 	try {
 		const {brandName} = req.params;
 		const result = await Goods.find({
-			brand: {$regex: brandName, $options: "i"}
+			brand: {$regex: escapeRegExp(brandName), $options: "i"}
 		});
 		res.json(result);
 	} catch (e) {
@@ -675,7 +677,7 @@ const findByBrandName = async (req, res) => {
 const findByCategory = async (req, res) => {
 	try {
 		const {category} = req.params;
-		const regex = new RegExp(category, "i");
+		const regex = new RegExp(escapeRegExp(category), "i");
 		const result = await Goods.find({
 			$or: [
 				{category: regex},
