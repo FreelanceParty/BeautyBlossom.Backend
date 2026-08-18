@@ -288,7 +288,16 @@ const updateUserData = async (req, res) => {
 	try {
 		const {_id} = req.user;
 		const {email, firstName, lastName, number} = req.body;
-		const normalizedNumber = number !== undefined ? normalizePhone(number) : undefined;
+		let normalizedNumber;
+		try {
+			normalizedNumber = number !== undefined ? normalizePhone(number) : undefined;
+		} catch (e) {
+			throw HttpError(400, "Невірний формат номеру телефону", {
+				isCustom: true,
+				code:     "INVALID_PHONE",
+				meta:     {field: "number"},
+			});
+		}
 
 		// Перевірка, чи користувач існує
 		const user = await User.findById(_id);
