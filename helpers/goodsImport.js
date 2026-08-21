@@ -47,7 +47,7 @@ const normNumber = (value) => {
 	if (!Number.isFinite(n)) {
 		return null;
 	}
-	return Math.round((n + Number.EPSILON) * 100) / 100;
+	return Math.round(n + Number.EPSILON);
 };
 
 const normBoolean = (value) => {
