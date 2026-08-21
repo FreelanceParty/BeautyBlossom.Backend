@@ -7,6 +7,7 @@ const xml2js = require("xml2js");
 const {transliterate} = require("../utils/transliterate");
 const sendTelegramMessage = require("../helpers/telegram");
 const {getGoodsIndex, toMeiliGoodsDoc} = require("../helpers/meili");
+const {buildImportReport, capReport} = require("../helpers/goodsImport");
 
 const parseBool = (value) => {
 	if (value === undefined) {
@@ -492,6 +493,113 @@ const deleteById = async (req, res) => {
 	}
 };
 
+const importPreview = async (req, res) => {
+	try {
+		if (!req.file || !req.file.buffer) {
+			throw HttpError(400, "Файл не завантажено");
+		}
+
+		const dbGoods = await Goods.find({}).lean();
+		const report = buildImportReport(req.file.buffer, dbGoods);
+
+		res.json({applied: false, ...capReport(report)});
+	} catch (e) {
+		if (e.status !== 400) {
+			await sendTelegramMessage(
+				"Backend. controllers/goods/importPreview",
+				`Error: ${e.message}`
+			);
+		}
+		console.error(e);
+		throw e;
+	}
+};
+
+const importApply = async (req, res) => {
+	try {
+		if (!req.file || !req.file.buffer) {
+			throw HttpError(400, "Файл не завантажено");
+		}
+		const {_id: owner} = req.user;
+
+		const dbGoods = await Goods.find({}).lean();
+		const report = buildImportReport(req.file.buffer, dbGoods);
+
+		const ops = [];
+		for (const {product} of report.added) {
+			ops.push({
+				updateOne: {
+					filter: {id: product.id},
+					update: {$set: product, $setOnInsert: {owner}},
+					upsert: true,
+				},
+			});
+		}
+		for (const {product} of report.updated) {
+			ops.push({
+				updateOne: {
+					filter: {id: product.id},
+					update: {$set: product},
+				},
+			});
+		}
+		if (ops.length) {
+			await Goods.bulkWrite(ops, {ordered: false});
+		}
+
+		const deletedNumericIds = report.deleted
+			.map((d) => d.id)
+			.filter((id) => id !== null && id !== undefined);
+		const deletedObjectIds = report.deleted
+			.filter((d) => d.id === null || d.id === undefined)
+			.map((d) => d._id)
+			.filter(Boolean);
+
+		if (deletedNumericIds.length) {
+			await Goods.deleteMany({id: {$in: deletedNumericIds}});
+		}
+		if (deletedObjectIds.length) {
+			await Goods.deleteMany({_id: {$in: deletedObjectIds}});
+		}
+
+		try {
+			const index = getGoodsIndex();
+			if (index) {
+				const changedIds = [
+					...report.added.map((a) => a.id),
+					...report.updated.map((u) => u.id),
+				];
+				if (changedIds.length) {
+					const fresh = await Goods.find({id: {$in: changedIds}});
+					if (fresh.length) {
+						await index.addDocuments(fresh.map(toMeiliGoodsDoc));
+					}
+				}
+				const removedMeiliIds = report.deleted
+					.map((d) => d._id)
+					.filter(Boolean)
+					.map((oid) => oid.toString());
+				if (removedMeiliIds.length) {
+					await index.deleteDocuments(removedMeiliIds);
+				}
+			}
+		} catch (indexErr) {
+			console.error("Meili sync error (import):", indexErr.message);
+		}
+
+		res.json({applied: true, ...capReport(report)});
+	} catch (e) {
+		if (e.status !== 400) {
+			await sendTelegramMessage(
+				"Backend. controllers/goods/importApply",
+				`Error: ${e.message}`
+			);
+		}
+		console.error(e);
+		throw e;
+	}
+};
+
 const search = async (req, res) => {
 	try {
 		const {q = "", limit = 40} = req.query;
@@ -702,6 +810,8 @@ module.exports = {
 	getRecommended:  ctrlWrapper(getRecommended),
 	getById:         ctrlWrapper(getById),
 	search:          ctrlWrapper(search),
+	importPreview:   ctrlWrapper(importPreview),
+	importApply:     ctrlWrapper(importApply),
 	add:             ctrlWrapper(add),
 	updateById:      ctrlWrapper(updateById),
 	updateCheked:    ctrlWrapper(updateCheked),
