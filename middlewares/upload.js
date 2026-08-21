@@ -55,7 +55,31 @@ const uploadProductImage = multer({
 
 // module.exports = upload;
 
+const MAX_IMPORT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
+
+const XLSX_MIME_TYPES = [
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+	"application/vnd.ms-excel",
+	"application/octet-stream",
+];
+
+const uploadImportFile = multer({
+	storage:    multer.memoryStorage(),
+	limits:     {fileSize: MAX_IMPORT_SIZE_BYTES},
+	fileFilter: (req, file, cb) => {
+		const isXlsxExt = /\.xlsx$/i.test(file.originalname || "");
+		if (XLSX_MIME_TYPES.includes(file.mimetype) && isXlsxExt) {
+			cb(null, true);
+		} else if (isXlsxExt) {
+			cb(null, true);
+		} else {
+			cb(new Error("Дозволено лише файли формату .xlsx"), false);
+		}
+	},
+}).single("file");
+
 module.exports = {
 	uploadEmail,
-	uploadProductImage
+	uploadProductImage,
+	uploadImportFile,
 };

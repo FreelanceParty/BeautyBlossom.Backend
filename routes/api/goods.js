@@ -3,10 +3,14 @@ const express = require("express");
 const ctrl = require("../../controllers/goods");
 
 const {validateBody, authenticate, requireAdmin} = require("../../middlewares");
+const {uploadImportFile} = require("../../middlewares/upload");
 
 const {schemas} = require("../../models/goods");
 
 const router = express.Router();
+
+router.post("/import/preview", authenticate, requireAdmin, uploadImportFile, ctrl.importPreview);
+router.post("/import/apply", authenticate, requireAdmin, uploadImportFile, ctrl.importApply);
 
 router.get("/googlefeed", ctrl.getXML);
 router.get("/products", ctrl.getCSV);

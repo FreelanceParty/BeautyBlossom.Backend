@@ -4,29 +4,34 @@ const {handleMongooseError} = require('../helpers');
 
 // const statusList = ['на складі', 'в роботі'];
 const goodsSchema = new Schema({
-	name:         String,
-	article:      String,
-	code:         Number,
-	amount:       Number,
-	description:  String,
-	priceOPT:     Number,
-	priceDrop:    Number,
-	price:        Number,
-	brand:        String,
-	images:       String,
-	country:      String,
-	availability: String,
-	id:           {
+	name:              String,
+	article:           String,
+	code:              Number,
+	amount:            Number,
+	description:       String,
+	priceOPT:          Number,
+	priceOldOPT:       Number,
+	priceDrop:         Number,
+	priceOldDrop:      Number,
+	price:             Number,
+	priceOld:          Number,
+	brand:             String,
+	images:            String,
+	country:           String,
+	compound:          String,
+	usageInstructions: String,
+	availability:      String,
+	id:                {
 		type:   Number,
 		unique: true,
 		sparse: true,
 		index:  true,
 	},
-	reviewsCount: {
+	reviewsCount:      {
 		type:    Number,
 		default: 0,
 	},
-	reviewsAvg:   {
+	reviewsAvg:        {
 		type:    Number,
 		default: 0,
 	},
