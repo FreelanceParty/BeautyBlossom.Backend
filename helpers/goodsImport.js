@@ -36,7 +36,12 @@ const normString = (value) => {
 	if (value === null || value === undefined) {
 		return "";
 	}
-	return String(value).trim();
+	// Нормалізуємо переноси рядків: у CSV опис зберігається з "\n",
+	// а в xlsx — з "\r\n". Без цього однаковий текст давав хибне "оновлення".
+	return String(value)
+		.replace(/\r\n/g, "\n")
+		.replace(/\r/g, "\n")
+		.trim();
 };
 
 const normNumber = (value) => {
