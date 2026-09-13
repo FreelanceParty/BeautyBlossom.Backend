@@ -54,12 +54,23 @@ const userSchema = new Schema(
     },
     optUser: {
       type: Boolean,
-      required: true,
+      required: false,
+      default: false,
     },
     dropUser: {
       type: Boolean,
       required: false,
       default: false,
+    },
+    retailUser: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    activeCabinet: {
+      type: String,
+      enum: ["opt", "drop", "retail"],
+      required: false,
     },
 
     isAdmin: {
@@ -109,8 +120,10 @@ const registerSchema = Joi.object({
   socialMedia: Joi.boolean().label("Соціальні мережі"),
   onlineShop: Joi.boolean().label("Онлайн-магазин"),
   offlineShop: Joi.boolean().label("Офлайн-магазин"),
-  optUser: Joi.boolean().required().label("Оптовий покупець"),
+  optUser: Joi.boolean().label("Оптовий покупець"),
   dropUser: Joi.boolean().label("Дроп покупець"),
+  retailUser: Joi.boolean().label("Роздрібний покупець"),
+  activeCabinet: Joi.string().valid("opt", "drop", "retail").label("Активний кабінет"),
   email: Joi.string().pattern(emailRegexp).required().label("Електронна пошта"),
   password: Joi.string().min(6).required().label("Пароль"),
 }).prefs({ messages: joiMessagesUk });

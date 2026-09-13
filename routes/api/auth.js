@@ -24,6 +24,10 @@ router.get("/current", authenticate, ctrl.getCurrent);
 
 router.post("/updateUserData/:id", authenticate, ctrl.updateUserData);
 
+router.post("/active-cabinet", authenticate, ctrl.setActiveCabinet);
+
+router.post("/cabinets", authenticate, ctrl.addCabinet);
+
 router.post("/changePassword", authenticate, ctrl.changePassword);
 
 router.post("/restorePassword", ctrl.restorePassword);

@@ -26,6 +26,70 @@ const sendTelegramMessage = require("../helpers/telegram");
 
 const normalizePhone = require("../helpers/normalizePhone");
 
+const CABINET_TYPES = ["opt", "drop", "retail"];
+
+// Which cabinet types this login owns, based on the ownership booleans.
+const getOwnedCabinets = (user) => {
+	const owned = [];
+	if (user.optUser) owned.push("opt");
+	if (user.dropUser) owned.push("drop");
+	if (user.retailUser) owned.push("retail");
+	return owned;
+};
+
+// Lazily migrate legacy users: give retail-only accounts explicit retail
+// ownership and backfill activeCabinet from the existing flags. Saves if changed.
+const ensureCabinetMigration = async (user) => {
+	let changed = false;
+	if (!user.optUser && !user.dropUser && !user.retailUser) {
+		user.retailUser = true;
+		changed = true;
+	}
+	if (!user.activeCabinet || !CABINET_TYPES.includes(user.activeCabinet)) {
+		user.activeCabinet = user.optUser ? "opt" : user.dropUser ? "drop" : "retail";
+		changed = true;
+	}
+	if (changed) {
+		await user.save();
+	}
+	return user;
+};
+
+const resolveActiveCabinet = (user) => {
+	if (user.activeCabinet && CABINET_TYPES.includes(user.activeCabinet)) {
+		return user.activeCabinet;
+	}
+	if (user.optUser) return "opt";
+	if (user.dropUser) return "drop";
+	return "retail";
+};
+
+// Build the auth response. optUser/dropUser are DERIVED from the ACTIVE cabinet
+// (not ownership) so the frontend renders prices/labels for the active cabinet
+// through the existing selectors without any change at the ~11 call sites.
+const buildAuthPayload = (user, extra = {}) => {
+	const activeCabinet = resolveActiveCabinet(user);
+	return {
+		email:         user.email,
+		firstName:     user.firstName,
+		lastName:      user.lastName,
+		number:        user.number,
+		isAdmin:       user.isAdmin,
+		_id:           user._id,
+		ownedCabinets: getOwnedCabinets(user),
+		activeCabinet,
+		optUser:       activeCabinet === "opt",
+		dropUser:      activeCabinet === "drop",
+		// Shared (per-login) cabinet details, used to prefill the "add cabinet" form.
+		city:          user.city,
+		link:          user.link,
+		onlineShop:    user.onlineShop,
+		offlineShop:   user.offlineShop,
+		socialMedia:   user.socialMedia,
+		...extra,
+	};
+};
+
 const register = async (req, res) => {
 	try {
 		const {email, password, number} = req.body;
@@ -45,23 +109,32 @@ const register = async (req, res) => {
 		const avatarURL = gravatar.url(email);
 		const verificationCode = nanoid();
 
+		// The first cabinet the account is registered with becomes its active one.
+		const chosenType = req.body.optUser
+			? "opt"
+			: req.body.dropUser
+				? "drop"
+				: "retail";
+
 		const newUser = await User.create({
 			email,
-			password:    hashPassword,
+			password:      hashPassword,
 			number,
-			firstName:   req.body.firstName,
-			lastName:    req.body.lastName,
-			country:     req.body.country,
-			city:        req.body.city,
-			link:        req.body.link,
-			offlineShop: req.body.offlineShop,
-			onlineShop:  req.body.onlineShop,
-			socialMedia: req.body.socialMedia,
-			optUser:     req.body.optUser,
-			dropUser:    req.body.dropUser,
+			firstName:     req.body.firstName,
+			lastName:      req.body.lastName,
+			country:       req.body.country,
+			city:          req.body.city,
+			link:          req.body.link,
+			offlineShop:   req.body.offlineShop,
+			onlineShop:    req.body.onlineShop,
+			socialMedia:   req.body.socialMedia,
+			optUser:       chosenType === "opt",
+			dropUser:      chosenType === "drop",
+			retailUser:    chosenType === "retail",
+			activeCabinet: chosenType,
 			avatarURL,
 			verificationCode,
-			isAdmin:     false,
+			isAdmin:       false,
 		});
 
 		const message = {
@@ -101,16 +174,7 @@ const register = async (req, res) => {
 			});
 		});
 
-		res.status(201).json({
-			email:     newUser.email,
-			firstName: newUser.firstName,
-			lastName:  newUser.lastName,
-			country:   newUser.country,
-			city:      newUser.city,
-			optUser:   newUser.optUser,
-			dropUser:  newUser.dropUser,
-			isAdmin:   newUser.isAdmin,
-		});
+		res.status(201).json(buildAuthPayload(newUser, {country: newUser.country, city: newUser.city}));
 
 		//     res.status(201).json({
 		//     email: newUser.email,
@@ -197,18 +261,11 @@ const login = async (req, res) => {
 		// токен можна розкодувати
 		// const decodeToken = jwt.decode(tocken)
 		// console.log(decodeToken);
-		await User.findByIdAndUpdate(user._id, {token});
+		await ensureCabinetMigration(user);
+		user.token = token;
+		await user.save();
 
-		res.json({
-			firstName: user.firstName,
-			lastName:  user.lastName,
-			number:    user.number,
-			email:     email,
-			token:     token,
-			isAdmin:   user.isAdmin,
-			optUser:   user.optUser,
-			dropUser:  user.dropUser,
-		});
+		res.json(buildAuthPayload(user, {token}));
 	} catch (e) {
 		if (e.status !== 401) {
 			await sendTelegramMessage(
@@ -223,18 +280,8 @@ const login = async (req, res) => {
 
 const getCurrent = async (req, res) => {
 	try {
-		const {_id, email, firstName, lastName, number, isAdmin, optUser, dropUser} =
-			      req.user;
-		res.json({
-			email,
-			firstName,
-			lastName,
-			number,
-			isAdmin,
-			optUser,
-			dropUser,
-			_id,
-		});
+		await ensureCabinetMigration(req.user);
+		res.json(buildAuthPayload(req.user));
 	} catch (e) {
 		await sendTelegramMessage(
 			"Backend. controllers/auth/getCurrent",
@@ -526,6 +573,81 @@ const restorePasswordStep2 = async (req, res) => {
 	}
 };
 
+// Switch the active cabinet. Must be a cabinet the login already owns.
+const setActiveCabinet = async (req, res) => {
+	try {
+		const {_id} = req.user;
+		const {type} = req.body;
+		if (!CABINET_TYPES.includes(type)) {
+			throw HttpError(400, "Невірний тип кабінету", {isCustom: true});
+		}
+		const user = await User.findById(_id);
+		if (!user) {
+			throw HttpError(404, "User not found");
+		}
+		await ensureCabinetMigration(user);
+		if (!getOwnedCabinets(user).includes(type)) {
+			throw HttpError(400, "У вас немає кабінету цього типу", {isCustom: true});
+		}
+		user.activeCabinet = type;
+		await user.save();
+		res.json(buildAuthPayload(user));
+	} catch (e) {
+		if (![400, 404].includes(e.status)) {
+			await sendTelegramMessage(
+				"Backend. controllers/auth/setActiveCabinet",
+				`Error: ${e.message}`
+			);
+		}
+		console.error(e);
+		throw e;
+	}
+};
+
+// Add another cabinet type to the current login and switch to it.
+// Shared fields (city/link/shop type) are filled in only when provided.
+const addCabinet = async (req, res) => {
+	try {
+		const {_id} = req.user;
+		const {type, city, link, onlineShop, offlineShop, socialMedia} = req.body;
+		if (!CABINET_TYPES.includes(type)) {
+			throw HttpError(400, "Невірний тип кабінету", {isCustom: true});
+		}
+		const user = await User.findById(_id);
+		if (!user) {
+			throw HttpError(404, "User not found");
+		}
+		await ensureCabinetMigration(user);
+
+		if (getOwnedCabinets(user).includes(type)) {
+			throw HttpError(409, "Кабінет цього типу вже існує", {isCustom: true});
+		}
+
+		if (type === "opt") user.optUser = true;
+		if (type === "drop") user.dropUser = true;
+		if (type === "retail") user.retailUser = true;
+
+		if (city !== undefined && city !== "") user.city = city;
+		if (link !== undefined && link !== "") user.link = link;
+		if (onlineShop !== undefined) user.onlineShop = onlineShop;
+		if (offlineShop !== undefined) user.offlineShop = offlineShop;
+		if (socialMedia !== undefined) user.socialMedia = socialMedia;
+
+		user.activeCabinet = type;
+		await user.save();
+		res.json(buildAuthPayload(user));
+	} catch (e) {
+		if (![400, 404, 409].includes(e.status)) {
+			await sendTelegramMessage(
+				"Backend. controllers/auth/addCabinet",
+				`Error: ${e.message}`
+			);
+		}
+		console.error(e);
+		throw e;
+	}
+};
+
 module.exports = {
 	register: ctrlWrapper(register),
 	// verifyEmail: ctrlWrapper(verifyEmail),
@@ -538,4 +660,6 @@ module.exports = {
 	changePassword:       ctrlWrapper(changePassword),
 	restorePassword:      ctrlWrapper(restorePassword),
 	restorePasswordStep2: ctrlWrapper(restorePasswordStep2),
+	setActiveCabinet:     ctrlWrapper(setActiveCabinet),
+	addCabinet:           ctrlWrapper(addCabinet),
 };

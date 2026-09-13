@@ -302,6 +302,7 @@ const createOrder = async ({userId, body}) => {
 		building:       body.building,
 		apartment:      body.apartment,
 		isOptUser:      body.isOptUser,
+		isDropUser:     body.isDropUser,
 		orderNumber:    body.orderNumber,
 		orderedItems:   body.orderedItems,
 	};
