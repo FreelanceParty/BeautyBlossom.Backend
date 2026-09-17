@@ -4,3 +4,7 @@ node_modules/
 .env.production
 .config.js
 /.idea
+
+# Runtime logs
+*.log
+public/server.log
