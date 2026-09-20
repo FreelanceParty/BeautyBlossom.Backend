@@ -262,7 +262,18 @@ const login = async (req, res) => {
 		// const decodeToken = jwt.decode(tocken)
 		// console.log(decodeToken);
 		await ensureCabinetMigration(user);
-		user.token = token;
+		// Append this login's token so multiple people/devices can stay logged
+		// in under the same account at once (instead of overwriting one field
+		// and kicking everyone else out). Cap the list so it can't grow forever.
+		if (!Array.isArray(user.tokens)) {
+			user.tokens = [];
+		}
+		user.tokens.push(token);
+		const MAX_ACTIVE_SESSIONS = 20;
+		if (user.tokens.length > MAX_ACTIVE_SESSIONS) {
+			user.tokens = user.tokens.slice(-MAX_ACTIVE_SESSIONS);
+		}
+		user.token = ""; // retire the legacy single-token field
 		await user.save();
 
 		res.json(buildAuthPayload(user, {token}));
@@ -295,7 +306,13 @@ const getCurrent = async (req, res) => {
 const logout = async (req, res) => {
 	try {
 		const {_id} = req.user;
-		await User.findByIdAndUpdate(_id, {token: ""});
+		// Remove only the current session's token so logging out on one
+		// device/browser doesn't sign out everyone else on the same account.
+		const currentToken = req.token;
+		await User.findByIdAndUpdate(_id, {
+			$pull: {tokens: currentToken},
+			$set:  {token: ""},
+		});
 
 		res.json({
 			message: "Logout success",

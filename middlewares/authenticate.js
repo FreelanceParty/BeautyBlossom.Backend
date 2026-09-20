@@ -16,10 +16,17 @@ const authenticate = async (req, res, next) => {
     try {
     const { id } = jwt.verify(token, SECRET_KEY);
     const user = await User.findById(id);
-    if (!user || !user.token || user.token !== token) {
+    // Valid if the token is one of the account's active session tokens.
+    // Also accept the legacy single-token field for sessions created before
+    // the multi-session migration.
+    const isKnownToken =
+      (Array.isArray(user?.tokens) && user.tokens.includes(token)) ||
+      (user && user.token === token && token);
+    if (!user || !isKnownToken) {
       return next(HttpError(401));
     }
     req.user = user;
+    req.token = token;
     next();
   } catch {
     next(HttpError(401));

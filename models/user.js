@@ -78,9 +78,18 @@ const userSchema = new Schema(
       required: false,
     },
 
+    // Legacy single-session field. Kept only so sessions that were active
+    // before the multi-session migration stay valid until the next login.
     token: {
       type: String,
       default: "",
+    },
+    // Active session tokens. Each login appends its own token here instead of
+    // overwriting a single field, so several people (or devices) can stay
+    // logged in under the same account without kicking each other out.
+    tokens: {
+      type: [String],
+      default: [],
     },
     avatarURL: {
       type: String,

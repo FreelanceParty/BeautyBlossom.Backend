@@ -14,11 +14,17 @@ const optionalAuthenticate = async (req, res, next) => {
 
 		const {id} = jwt.verify(token, SECRET_KEY);
 		const user = await User.findById(id);
-		if (!user || !user.token || user.token !== token) {
+		// Accept any of the account's active session tokens (plus the legacy
+		// single-token field for pre-migration sessions).
+		const isKnownToken =
+			(Array.isArray(user?.tokens) && user.tokens.includes(token)) ||
+			(user && user.token === token && token);
+		if (!user || !isKnownToken) {
 			return next();
 		}
 
 		req.user = user;
+		req.token = token;
 		next();
 	} catch {
 		next();
