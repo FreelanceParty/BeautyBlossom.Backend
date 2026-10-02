@@ -36,6 +36,28 @@ const parsePositiveInt = (value, fallback) => {
 
 const escapeRegExp = (value) => String(value ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+const ensureGoodsCode = (product) => {
+	if (!product || typeof product !== "object") {
+		return product;
+	}
+	const codeNum = Number(product.code);
+	if (Number.isFinite(codeNum) && codeNum > 0) {
+		return product;
+	}
+	const idNum = Number(product.id);
+	if (Number.isFinite(idNum) && idNum > 0) {
+		return {...product, code: idNum};
+	}
+	return product;
+};
+
+const withCodeFallbackIfPresent = (product) => {
+	if (!product || typeof product !== "object" || !("code" in product)) {
+		return product;
+	}
+	return ensureGoodsCode(product);
+};
+
 const getAll = async (req, res) => {
 	try {
 		const {
@@ -366,7 +388,7 @@ const getById = async (req, res) => {
 const add = async (req, res) => {
 	try {
 		const {_id: owner} = req.user;
-		const result = await Goods.create({...req.body, owner});
+		const result = await Goods.create(ensureGoodsCode({...req.body, owner}));
 		try {
 			const index = getGoodsIndex();
 			if (index) {
@@ -389,7 +411,7 @@ const add = async (req, res) => {
 const updateById = async (req, res) => {
 	try {
 		const {id} = req.params;
-		const result = await Goods.findOneAndUpdate({id: Number(id)}, req.body, {new: true});
+		const result = await Goods.findOneAndUpdate({id: Number(id)}, withCodeFallbackIfPresent(req.body), {new: true});
 		if (!result) {
 			throw HttpError(404, "Not found");
 		}
@@ -530,7 +552,7 @@ const importApply = async (req, res) => {
 			ops.push({
 				updateOne: {
 					filter: {id: product.id},
-					update: {$set: product, $setOnInsert: {owner}},
+					update: {$set: ensureGoodsCode(product), $setOnInsert: {owner}},
 					upsert: true,
 				},
 			});
@@ -539,7 +561,7 @@ const importApply = async (req, res) => {
 			ops.push({
 				updateOne: {
 					filter: {id: product.id},
-					update: {$set: product},
+					update: {$set: withCodeFallbackIfPresent(product)},
 				},
 			});
 		}
