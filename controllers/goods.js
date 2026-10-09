@@ -51,6 +51,42 @@ const ensureGoodsCode = (product) => {
 	return product;
 };
 
+const SITE_URL = "https://www.beautyblossom.com.ua";
+
+const formatFeedPrice = (value) => `${Number(value).toFixed(2)} UAH`;
+
+const getFeedPrices = (item) => {
+	const price = Number(item.price) || 0;
+	const priceOld = Number(item.priceOld) || 0;
+	if (item.sale === true && priceOld > price && price > 0) {
+		return {price: formatFeedPrice(priceOld), salePrice: formatFeedPrice(price)};
+	}
+	return {price: formatFeedPrice(price), salePrice: null};
+};
+
+// GTIN (EAN/UPC)
+const getValidGtin = (code) => {
+	const digits = String(code ?? "").trim();
+	if (!/^(\d{8}|\d{12}|\d{13}|\d{14})$/.test(digits)) {
+		return null;
+	}
+	const nums = digits.split("").map(Number);
+	const checkDigit = nums.pop();
+	const sum = nums
+		.reverse()
+		.reduce((acc, n, i) => acc + n * (i % 2 === 0 ? 3 : 1), 0);
+	return (10 - (sum % 10)) % 10 === checkDigit ? digits : null;
+};
+
+const getFeedLabels = (item) => ({
+	custom_label_0: item.sale ? "sale" : "no_sale",
+	custom_label_1: item.new ? "new" : "not_new",
+	custom_label_2: item.category || "",
+	custom_label_3: item.subCategory || "",
+	custom_label_4: item.subSubCategory || "",
+	product_type:   [item.category, item.subCategory, item.subSubCategory].filter(Boolean).join(" > "),
+});
+
 const withCodeFallbackIfPresent = (product) => {
 	if (!product || typeof product !== "object" || !("code" in product)) {
 		return product;
@@ -660,40 +696,44 @@ const getCSV = async (req, res) => {
 			return res.status(404).send("No goods found");
 		}
 
-		// Додаємо властивість 'link', 'availability' та 'condition' до кожного товару
-		const updatedGoods = goods.map((item) => ({
-			...item.toObject(), // Перетворюємо товар на звичайний об'єкт
-			link: `https://www.beautyblossom.com.ua/products/${item.id}`, // Використовуємо 'id'
-			// todo: use only id, not _id, so may be delete this?
-			id:           item._id,
-			title:        item.name,
-			availability: item.amount > 0 ? "in stock" : "out of stock",
-			condition:    "new",
-			image_link:   item.images,
-		}));
+		const updatedGoods = goods.map((item) => {
+			const {price, salePrice} = getFeedPrices(item);
+			return {
+				id:           item.id ?? String(item._id),
+				title:        item.name,
+				description:  item.description,
+				availability: item.amount > 0 ? "in stock" : "out of stock",
+				condition:    "new",
+				price,
+				sale_price:   salePrice ?? "",
+				link:         `${SITE_URL}/products/${item.id}`,
+				image_link:   item.images,
+				brand:        item.brand,
+				gtin:         getValidGtin(item.code) ?? "",
+				mpn:          item.article || "",
+				...getFeedLabels(item),
+			};
+		});
 
-		// Визначаємо поля, які мають бути у CSV-файлі
 		const fields = [
-			"title",
-			"condition",
 			"id",
-			"name",
-			"article",
-			"code",
-			"amount",
+			"title",
 			"description",
-			"priceOPT",
-			"price",
-			"link",
-			"brand",
-			"image_link",
-			"country",
-			"new",
-			"sale",
-			"category",
-			"subCategory",
-			"subSubCategory",
 			"availability",
+			"condition",
+			"price",
+			"sale_price",
+			"link",
+			"image_link",
+			"brand",
+			"gtin",
+			"mpn",
+			"product_type",
+			"custom_label_0",
+			"custom_label_1",
+			"custom_label_2",
+			"custom_label_3",
+			"custom_label_4",
 		];
 		const json2csvParser = new Parser({fields});
 		const csv = json2csvParser.parse(updatedGoods); // Перетворюємо дані у CSV
@@ -721,16 +761,20 @@ const getXML = async (req, res) => {
 		}
 
 		const updatedGoods = goods.map((item) => {
+			const {price, salePrice} = getFeedPrices(item);
+			const gtin = getValidGtin(item.code);
+			const labels = getFeedLabels(item);
+
 			const xmlItem = {
-				// todo: use only id, not _id, so may be change this?
+				// Залишаємо _id: зміна id в Merchant Center обнулить історію товарів у Google Ads
 				"g:id":           item._id ? String(item._id) : "N/A",
 				"g:title":        item.name || "No title",
 				"g:description":  item.description || "No description available",
-				"g:link":         `https://www.beautyblossom.com.ua/products/${item.id}`,
+				"g:link":         `${SITE_URL}/products/${item.id}`,
 				"g:image_link":   item.images || "",
 				"g:condition":    "new",
 				"g:availability": item.amount > 0 ? "in stock" : "out of stock",
-				"g:price":        `${item.price}.00 UAH`,
+				"g:price":        price,
 				"g:brand":        item.brand || "Unknown",
 				"g:mpn":          item.article || "",
 				"g:shipping":     {
@@ -740,10 +784,17 @@ const getXML = async (req, res) => {
 				},
 			};
 
-			// 🟥 Ось додавання <g:sale_price>
-			if (item.sale === true) {
-				xmlItem["g:sale_price"] = `${item.priceOPT || item.price} UAH`;
+			if (salePrice) {
+				xmlItem["g:sale_price"] = salePrice;
 			}
+			if (gtin) {
+				xmlItem["g:gtin"] = gtin;
+			}
+			Object.entries(labels).forEach(([key, value]) => {
+				if (value) {
+					xmlItem[`g:${key}`] = value;
+				}
+			});
 
 			return xmlItem;
 		});
