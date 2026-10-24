@@ -64,6 +64,8 @@ const getFeedPrices = (item) => {
 	return {price: formatFeedPrice(price), salePrice: null};
 };
 
+const getFeedImageLink = (url) => String(url ?? "").replace(/^https?:\/\/crm\.h-profit\.com\//i, "https://h-profit.com/");
+
 // GTIN (EAN/UPC)
 const getValidGtin = (code) => {
 	const digits = String(code ?? "").trim();
@@ -771,7 +773,7 @@ const getXML = async (req, res) => {
 				"g:title":        item.name || "No title",
 				"g:description":  item.description || "No description available",
 				"g:link":         `${SITE_URL}/products/${item.id}`,
-				"g:image_link":   item.images || "",
+				"g:image_link":   getFeedImageLink(item.images),
 				"g:condition":    "new",
 				"g:availability": item.amount > 0 ? "in stock" : "out of stock",
 				"g:price":        price,
