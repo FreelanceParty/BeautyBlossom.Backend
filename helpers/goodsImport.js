@@ -28,6 +28,11 @@ const FIELD_TYPES = {
 	compound:          "string",
 	filterTagIds:      "string",
 	usageInstructions: "string",
+	age:               "string",
+	skinType:          "string",
+	purpose:           "string",
+	volume:            "string",
+	gender:            "string",
 };
 
 const COMPARABLE_FIELDS = Object.keys(FIELD_TYPES).filter((f) => f !== MATCH_KEY);

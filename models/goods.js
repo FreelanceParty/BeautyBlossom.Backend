@@ -20,6 +20,11 @@ const goodsSchema = new Schema({
 	country:           String,
 	compound:          String,
 	usageInstructions: String,
+	age:               String,
+	skinType:          String,
+	purpose:           String,
+	volume:            String,
+	gender:            String,
 	availability:      String,
 	id:                {
 		type:   Number,
@@ -88,6 +93,11 @@ const addSchema = Joi.object({
 	subCategory:    Joi.string().allow('').optional(),
 	subSubCategory: Joi.string().allow('').optional(),
 	filterTagIds:   Joi.string().allow('').optional(),
+	age:            Joi.string().allow('').optional(),
+	skinType:       Joi.string().allow('').optional(),
+	purpose:        Joi.string().allow('').optional(),
+	volume:         Joi.string().allow('').optional(),
+	gender:         Joi.string().allow('').optional(),
 });
 
 const updateChekedSchema = Joi.object({
