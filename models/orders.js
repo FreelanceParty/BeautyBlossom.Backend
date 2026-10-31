@@ -133,7 +133,12 @@ const phoneJoi = Joi.string()
 		} catch (e) {
 			return helpers.error("any.invalid");
 		}
-	}, "phone normalization");
+	}, "phone normalization")
+	.messages({
+		"any.required": "Введіть номер телефону",
+		"string.empty": "Введіть номер телефону",
+		"any.invalid":  "Невірний номер телефону. Перевірте кількість цифр і код оператора",
+	});
 
 const addSchema = Joi.object({
 	email:          Joi.string().required(),

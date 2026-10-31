@@ -1,5 +1,6 @@
 // const wood = require("../WoodStorage/wood")
 
+const {isValidObjectId} = require("mongoose");
 const {Goods} = require("../models/goods");
 const {Parser} = require("json2csv"); // Пакет для перетворення JSON в CSV
 const {HttpError, ctrlWrapper} = require("../helpers");
@@ -405,8 +406,12 @@ const getNews = async (req, res) => {
 const getById = async (req, res) => {
 	try {
 		const {id} = req.params;
-		// const result = await Book.findOne({_id: id})
-		const result = await Goods.findOne({id: id});
+		let result = null;
+		if (/^\d+$/.test(id)) {
+			result = await Goods.findOne({id: Number(id)});
+		} else if (isValidObjectId(id)) {
+			result = await Goods.findById(id);
+		}
 		if (!result) {
 			throw HttpError(404, "Not found");
 		}
@@ -415,7 +420,7 @@ const getById = async (req, res) => {
 		if (e.status !== 404) {
 			await sendTelegramMessage(
 				"Backend. controllers/goods/getById",
-				e.message
+				`${e.message}\n\nid: ${req.params.id}\nReferer: ${req.get("referer") || "-"}\nUser-Agent: ${req.get("user-agent") || "-"}`
 			);
 		}
 		console.error(e);
