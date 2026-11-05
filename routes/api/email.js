@@ -1,10 +1,11 @@
 const express = require("express");
 const {sendEmail} = require("../../controllers/nodemailer"); // Імпорт функції sendEmail з контролера
+const {authenticate, requireAdmin} = require("../../middlewares");
 const {uploadEmail} = require("../../middlewares/upload"); // Імпорт middleware для завантаження файлів
 
 const router = express.Router();
 
-router.post("/sendemail", uploadEmail, async (req, res) => {
+router.post("/sendemail", authenticate, requireAdmin, uploadEmail, async (req, res) => {
 	try {
 		// Отримання шляхів до завантажених файлів та генерація cid
 		const paths = req.files.map((file, index) => ({

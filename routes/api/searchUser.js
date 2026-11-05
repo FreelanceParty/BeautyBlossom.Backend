@@ -2,8 +2,10 @@ const express = require("express");
 
 const ctrl = require("../../controllers/users");
 
+const {authenticate, requireAdmin} = require("../../middlewares");
+
 const router = express.Router();
 
-router.post("/", ctrl.getUsers);
+router.post("/", authenticate, requireAdmin, ctrl.getUsers);
 
 module.exports = router;
