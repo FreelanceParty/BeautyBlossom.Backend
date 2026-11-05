@@ -15,6 +15,10 @@ const postWithRetry = async (url, payload) => {
 };
 
 const send = async (req, res) => {
+	if (process.env.APP_ENV === "staging") {
+		return res.status(200).json({success: true, skipped: true});
+	}
+
 	try {
 		// eslint-disable-next-line camelcase
 		const {event_name, event_id, event_source_url, user_data = {}, custom_data = {}} = req.body;

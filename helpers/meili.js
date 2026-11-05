@@ -3,6 +3,7 @@ const {MeiliSearch} = require("meilisearch");
 const getMeiliClient = () => {
 	const host = process.env.MEILI_HOST;
 	if (!host) return null;
+	if (process.env.APP_ENV === "staging" && !/staging/.test(process.env.MEILI_INDEX_GOODS || "")) return null;
 
 	return new MeiliSearch({
 		host,

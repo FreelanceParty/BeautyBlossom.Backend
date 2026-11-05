@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
 
 const mailer = async (message) => {
 	try {
-		if (APP_ENV === 'local' && message.to !== TEST_EMAIL) {
+		if (['local', 'staging'].includes(APP_ENV) && message.to !== TEST_EMAIL) {
 			return;
 		}
 		await transporter.sendMail({
