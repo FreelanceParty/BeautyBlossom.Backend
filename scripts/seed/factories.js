@@ -73,19 +73,22 @@ const priceForUser = (user, product) => {
 	return product.price ?? 0;
 };
 
-const buildOrderItem = (random, product) => ({
-	productId: String(product.id),
-	images:    product.images,
-	code:      String(product.code ?? ""),
-	amount:    product.amount ?? 0,
-	name:      product.name,
-	quantity:  random.int(1, 3),
-	sale:      Boolean(product.sale),
-});
+const buildOrderItem = (random, {user, product}) => {
+	const quantity = random.int(1, 3);
+	return {
+		productId: String(product.id),
+		images:    product.images,
+		code:      String(product.code ?? ""),
+		amount:    priceForUser(user, product) * quantity,
+		name:      product.name,
+		quantity,
+		sale:      Boolean(product.sale),
+	};
+};
 
 const buildOrder = (random, {user, products, index}) => {
-	const items = Array.from({length: random.int(1, 5)}, () => buildOrderItem(random, random.pick(products)));
-	const total = items.reduce((sum, item) => sum + priceForUser(user, products.find((p) => String(p.id) === item.productId)) * item.quantity, 0);
+	const items = Array.from({length: random.int(1, 5)}, () => buildOrderItem(random, {user, product: random.pick(products)}));
+	const total = items.reduce((sum, item) => sum + item.amount, 0);
 	const isCourier = !user.dropUser && random.next() < 0.3;
 	const deliveryMethod = user.dropUser ? "Дропшипінг" : isCourier ? "Доставка кур'єром" : "Доставка на відділення";
 	return {
