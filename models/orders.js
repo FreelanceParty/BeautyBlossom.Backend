@@ -81,6 +81,11 @@ const ordersSchema = new Schema({
 		type:     String,
 		required: true
 	},
+	idempotencyKey: {
+		type:   String,
+		select: false,
+		index:  {unique: true, sparse: true},
+	},
 
 	orderedItems: [
 		{
@@ -158,6 +163,7 @@ const addSchema = Joi.object({
 	isOptUser:      Joi.boolean(),
 	isDropUser:     Joi.boolean(),
 	orderNumber:    Joi.string(),
+	idempotencyKey: Joi.string().guid({version: "uuidv4"}),
 	orderedItems:   Joi.array().items(Joi.object({
 		productId: Joi.number().required(),
 		name:      Joi.string().required(),

@@ -10,6 +10,8 @@ const create = (payload) => orders.create(payload);
 
 const findById = (id) => orders.findById(id);
 
+const findByIdempotencyKey = (idempotencyKey) => orders.findOne({idempotencyKey});
+
 const updateById = (id, payload) => orders.findByIdAndUpdate(id, payload, {new: true});
 
 const updateStatusById = (id, status) => {
@@ -23,6 +25,7 @@ module.exports = {
 	findPaginated,
 	create,
 	findById,
+	findByIdempotencyKey,
 	updateById,
 	updateStatusById,
 	removeById,

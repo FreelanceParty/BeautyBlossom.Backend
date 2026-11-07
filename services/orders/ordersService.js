@@ -307,11 +307,26 @@ const createOrder = async ({userId, body}) => {
 		orderedItems:   body.orderedItems,
 	};
 
+	if (body.idempotencyKey) {
+		payload.idempotencyKey = body.idempotencyKey;
+	}
+
 	if (userId) {
 		payload.owner = userId;
 	}
 
-	const order = await ordersRepository.create(payload);
+	let order;
+	try {
+		order = await ordersRepository.create(payload);
+	} catch (e) {
+		if (e.code === 11000 && e.keyPattern?.idempotencyKey) {
+			const existingOrder = await ordersRepository.findByIdempotencyKey(body.idempotencyKey);
+			if (existingOrder) {
+				return existingOrder;
+			}
+		}
+		throw e;
+	}
 
 	setImmediate(() => {
 		sendOrderCreatedEmails(order).catch(async (e) => {
