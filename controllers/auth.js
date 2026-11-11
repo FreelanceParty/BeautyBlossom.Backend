@@ -640,12 +640,24 @@ const addCabinet = async (req, res) => {
 			throw HttpError(409, "Кабінет цього типу вже існує", {isCustom: true});
 		}
 
-		if (type === "opt") user.optUser = true;
+		if (type === "opt") {
+			const finalLink = typeof link === "string" && link.trim() ? link.trim() : user.link;
+			if (!finalLink || !String(finalLink).trim()) {
+				const message = "Вкажіть посилання на ваш сайт або сторінку";
+				throw HttpError(400, message, {isCustom: true, errors: {link: message}});
+			}
+			const hasShopType = [onlineShop ?? user.onlineShop, offlineShop ?? user.offlineShop, socialMedia ?? user.socialMedia].some(Boolean);
+			if (!hasShopType) {
+				const message = "Оберіть тип вашого магазину";
+				throw HttpError(400, message, {isCustom: true, errors: {shopType: message}});
+			}
+			user.optUser = true;
+		}
 		if (type === "drop") user.dropUser = true;
 		if (type === "retail") user.retailUser = true;
 
 		if (city !== undefined && city !== "") user.city = city;
-		if (link !== undefined && link !== "") user.link = link;
+		if (typeof link === "string" && link.trim()) user.link = link.trim();
 		if (onlineShop !== undefined) user.onlineShop = onlineShop;
 		if (offlineShop !== undefined) user.offlineShop = offlineShop;
 		if (socialMedia !== undefined) user.socialMedia = socialMedia;

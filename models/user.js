@@ -125,7 +125,9 @@ const registerSchema = Joi.object({
   lastName: Joi.string().required().label("Прізвище"),
   city: Joi.string().label("Місто"),
   number: phoneJoi,
-  link: Joi.string().allow('').label("Посилання"),
+  link: Joi.string().trim().allow('').label("Посилання")
+    .when("optUser", { is: true, then: Joi.string().trim().disallow('').required()
+      .messages({ "any.invalid": 'Поле "Посилання" не може бути порожнім' }) }),
   socialMedia: Joi.boolean().label("Соціальні мережі"),
   onlineShop: Joi.boolean().label("Онлайн-магазин"),
   offlineShop: Joi.boolean().label("Офлайн-магазин"),
@@ -135,7 +137,13 @@ const registerSchema = Joi.object({
   activeCabinet: Joi.string().valid("opt", "drop", "retail").label("Активний кабінет"),
   email: Joi.string().pattern(emailRegexp).required().label("Електронна пошта"),
   password: Joi.string().min(6).required().label("Пароль"),
-}).prefs({ messages: joiMessagesUk });
+}).custom((value, helpers) => {
+  if (value.optUser && !value.onlineShop && !value.offlineShop && !value.socialMedia) {
+    return helpers.error("object.shopType");
+  }
+  return value;
+}).messages({ "object.shopType": "Оберіть тип вашого магазину" })
+  .prefs({ messages: joiMessagesUk });
 
 const emailSchema = Joi.object({
   email: Joi.string().pattern(emailRegexp).required().label("Електронна пошта"),
