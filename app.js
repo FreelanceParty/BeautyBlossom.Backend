@@ -19,6 +19,7 @@ const productReviewsRouter = require("./routes/api/productReviews");
 const filtersRouter = require("./routes/api/filters");
 
 const path = require("path");
+const {maintenance} = require("./middlewares");
 
 // const bodyParser = require("body-parser");
 const app = express(); // веб сервер
@@ -33,6 +34,7 @@ app.use(logger(formatsLogger));
 // логер це спеціальна мідлвара щоб вивести в консоль інфу про запит
 // для дебагінгу
 app.use(cors());
+app.use(maintenance);
 
 // для обходу корсу щоб працював фронт і бек//
 
