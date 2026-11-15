@@ -3,6 +3,7 @@ const moment = require("moment");
 const logger = require("morgan");
 const fs = require("fs/promises");
 const cors = require("cors");
+const compression = require("compression");
 // require("dotenv").config();
 
 const authRouter = require("./routes/api/auth");
@@ -24,6 +25,7 @@ const {maintenance} = require("./middlewares");
 // const bodyParser = require("body-parser");
 const app = express(); // веб сервер
 
+app.use(compression());
 app.use(express.static(path.join(__dirname, "public")));
 
 // шукає запит шлях поки не знайде 1 підходяще
